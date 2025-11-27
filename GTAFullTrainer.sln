@@ -1,0 +1,109 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36717.8 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTAFullTrainer", "GTA\GTAFullTrainer.csproj", "{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		AnimationEngine.cs = AnimationEngine.cs
+		ConfigManager.cs = ConfigManager.cs
+		InputManager.cs = InputManager.cs
+		MenuEngine.cs = MenuEngine.cs
+		Theme.cs = Theme.cs
+		TrainerMain.cs = TrainerMain.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Pages", "Pages", "{190707DF-6DD4-4057-A2F6-00CA9A1DA93A}"
+	ProjectSection(SolutionItems) = preProject
+		CameraPage.cs = CameraPage.cs
+		ChaosPage.cs = ChaosPage.cs
+		DevPage.cs = DevPage.cs
+		HandlingEditorPage.cs = HandlingEditorPage.cs
+		HUDWidgetsPage.cs = HUDWidgetsPage.cs
+		MovieToolsPage.cs = MovieToolsPage.cs
+		NPCPage.cs = NPCPage.cs
+		ObjectsPage.cs = ObjectsPage.cs
+		PlayerPage.cs = PlayerPage.cs
+		SettingsPage.cs = SettingsPage.cs
+		SuperpowersPage.cs = SuperpowersPage.cs
+		TeleportPage.cs = TeleportPage.cs
+		VehiclesPage.cs = VehiclesPage.cs
+		WeaponModderPage.cs = WeaponModderPage.cs
+		WeaponsPage.cs = WeaponsPage.cs
+		WorldBuilderPage.cs = WorldBuilderPage.cs
+		WorldPage.cs = WorldPage.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{B8F0829F-710B-49C6-8293-3000D4270D1A}"
+	ProjectSection(SolutionItems) = preProject
+		MainScript.cs = MainScript.cs
+		MenuThemePage.cs = MenuThemePage.cs
+		NewMenuRenderer.cs = NewMenuRenderer.cs
+		NewUIRenderer.cs = NewUIRenderer.cs
+		SoundManager.cs = SoundManager.cs
+		ThemeManager.cs = ThemeManager.cs
+		UIButton.cs = UIButton.cs
+		UICategorySidebar.cs = UICategorySidebar.cs
+		UIContainer.cs = UIContainer.cs
+		UIControl.cs = UIControl.cs
+		UICore.cs = UICore.cs
+		UIElement.cs = UIElement.cs
+		UIKeybind.cs = UIKeybind.cs
+		UIList.cs = UIList.cs
+		UIMenuPage.cs = UIMenuPage.cs
+		UISlider.cs = UISlider.cs
+		UIToggle.cs = UIToggle.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Utils", "Utils", "{3B179249-A67F-491A-B0DD-86405049B972}"
+	ProjectSection(SolutionItems) = preProject
+		DrawUtils.cs = DrawUtils.cs
+		KeyUtils.cs = KeyUtils.cs
+		MathUtils.cs = MathUtils.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		TrainerConfig.ini = TrainerConfig.ini
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Effects", "Effects", "{6B802E77-637D-4F96-A55E-92A675A9AAEA}"
+	ProjectSection(SolutionItems) = preProject
+		Animation.cs = Animation.cs
+		Glow.cs = Glow.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "API", "API", "{679EEAE0-BB2B-484B-AC0E-656E36502D1D}"
+	ProjectSection(SolutionItems) = preProject
+		MenuAPI.cs = MenuAPI.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{E143B307-2F7F-41E6-8A2B-D04008E3A887}"
+	ProjectSection(SolutionItems) = preProject
+		ITrainerPlugin.cs = ITrainerPlugin.cs
+		PluginLoader.cs = PluginLoader.cs
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1EB5E868-EC8E-4FE2-9D84-C986A072CD1E} = {8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {89DEE773-7AA5-42E6-B611-6FFC35101862}
+	EndGlobalSection
+EndGlobal
