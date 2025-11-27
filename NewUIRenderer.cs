@@ -3,26 +3,19 @@ using System.Collections.Generic;
 using System.Drawing;
 using GTA;
 using GTA.Native;
-using GTAFullTrainer.UI;
-using GTAFullTrainer.Utils;
-using GTAFullTrainer.Effects;
+using NinnyTrainer.UI;
+using NinnyTrainer.Utils;
+using NinnyTrainer.Effects;
 
-namespace GTAFullTrainer.Rendering
+namespace NinnyTrainer.Rendering
 {
     public static class NewUIRenderer
     {
-        // Sidebar category animation offsets
-        private static float categoryPulse = 0f;
-
-        // Smooth Y positions for each category (for animated hover)
-        private static Dictionary<int, float> catY = new();
+        private static Dictionary<int, float> categoryY = new();
 
         public static void DrawBackdrop()
         {
-            // Dark transparent overlay (behind menu)
             DrawUtils.RectFullScreen(Color.FromArgb(120, 10, 10, 10));
-
-            // Soft blur effect (GTA built-in screen filter)
             Function.Call(Hash._SET_SCREEN_EFFECT, "MenuMGHeistOut", 0, true);
         }
 
@@ -33,45 +26,24 @@ namespace GTAFullTrainer.Rendering
 
             for (int i = 0; i < categories.Count; i++)
             {
-                if (!catY.ContainsKey(i))
-                    catY[i] = startY + i * 55;
+                if (!categoryY.ContainsKey(i))
+                    categoryY[i] = startY + i * 55;
 
-                // Smooth vertical easing
                 float targetY = startY + i * 55;
-                catY[i] = Animation.Smooth(catY[i], targetY, 0.10f);
+                categoryY[i] = Animation.Smooth(categoryY[i], targetY, 0.12f);
 
                 bool selected = (i == active);
-
-                // Rectangle for category button
-                Rectangle rect = new Rectangle(
-                    baseX,
-                    (int)catY[i],
-                    250,
-                    45
-                );
+                Rectangle rect = new Rectangle(baseX, (int)categoryY[i], 250, 45);
 
                 if (selected)
                 {
-                    // Neon glow behind selected category
                     Glow.NeonRect(rect, ThemeManager.GlowColor, Animation.Pulse(3));
-
-                    DrawUtils.Text(
-                        categories[i],
-                        rect.X + 25, rect.Y + 10,
-                        0.65f,
-                        ThemeManager.MainColor
-                    );
+                    DrawUtils.Text(categories[i], rect.X + 25, rect.Y + 10, 0.65f, ThemeManager.MainColor);
                 }
                 else
                 {
                     DrawUtils.Rect(rect, Color.FromArgb(80, 15, 15, 15));
-
-                    DrawUtils.Text(
-                        categories[i],
-                        rect.X + 25, rect.Y + 10,
-                        0.55f,
-                        Color.White
-                    );
+                    DrawUtils.Text(categories[i], rect.X + 25, rect.Y + 10, 0.55f, Color.White);
                 }
             }
         }
@@ -83,12 +55,8 @@ namespace GTAFullTrainer.Rendering
             for (int i = 0; i < items.Count; i++)
             {
                 UIControl item = items[i];
-
-                bool selected = (i == activeItem);
-                item.Selected = selected;
-
+                item.Selected = (i == activeItem);
                 float y = startY + i * 55;
-
                 item.Draw(x, y);
             }
         }

@@ -2,38 +2,37 @@
 using System.IO;
 using System.Reflection;
 using GTA;
-using GTAFullTrainer.API;
+using NinnyTrainer.API;
 
-namespace GTAFullTrainer.Plugins
+namespace NinnyTrainer.Plugins
 {
     public static class PluginLoader
     {
         public static void LoadPlugins()
         {
-            string folder = "Plugins";
+            string folder = "scripts/NinnyTrainer/Plugins";
 
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
-            foreach (string file in Directory.GetFiles(folder, "*.dll"))
+            foreach (string dll in Directory.GetFiles(folder, "*.dll"))
             {
                 try
                 {
-                    Assembly asm = Assembly.LoadFrom(file);
+                    Assembly asm = Assembly.LoadFrom(dll);
 
-                    foreach (Type t in asm.GetTypes())
+                    foreach (var type in asm.GetTypes())
                     {
-                        if (t.GetInterface("ITrainerPlugin") != null)
+                        if (typeof(ITrainerPlugin).IsAssignableFrom(type) && !type.IsInterface)
                         {
-                            ITrainerPlugin plugin = (ITrainerPlugin)Activator.CreateInstance(t);
+                            ITrainerPlugin plugin = (ITrainerPlugin)Activator.CreateInstance(type);
                             plugin.Initialize();
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    UI.SoundManager.PlaySelect();
-                    GTA.UI.Notify("Plugin Error: " + ex.Message);
+                    GTA.UI.Notify($"~r~Plugin Error:~s~ {ex.Message}");
                 }
             }
         }

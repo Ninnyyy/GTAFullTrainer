@@ -1,34 +1,29 @@
 ﻿using System;
 using System.Drawing;
-using GTAFullTrainer.Effects;
-using GTAFullTrainer.Utils;
+using NinnyTrainer.Effects;
+using NinnyTrainer.Utils;
 
-namespace GTAFullTrainer.UI
+namespace NinnyTrainer.UI
 {
     public class UIButton : UIControl
     {
         private Action callback;
 
-        public UIButton(string label, Action callback) : base(label)
+        public UIButton(string label, Action action) : base(label)
         {
-            this.callback = callback;
+            callback = action;
         }
 
         public override void Draw(float x, float y)
         {
-            Color text = Selected ? ThemeManager.MainColor : Color.White;
-            float glow = Selected ? Animation.Pulse(3) : 0f;
-
             Rectangle rect = new Rectangle((int)x, (int)y, 500, 40);
 
-            // Glow + base button
-            GTAFullTrainer.Effects.Glow.NeonRect(rect, ThemeManager.GlowColor, glow);
+            if (Selected)
+                Glow.NeonRect(rect, ThemeManager.GlowColor, Animation.Pulse(3));
 
-            DrawUtils.Text(Label,
-                rect.X + 20,
-                rect.Y + 8,
+            DrawUtils.Text(Label, rect.X + 20, rect.Y + 10,
                 Selected ? 0.55f : 0.50f,
-                text);
+                Selected ? ThemeManager.MainColor : Color.White);
         }
 
         public override void OnActivate()

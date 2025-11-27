@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<RootNamespace>NinnyTrainer</RootNamespace>
+		<AssemblyName>NinnyTrainer</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="ScriptHookVDotNet">
+			<HintPath>..\ScriptHookVDotNet\ScriptHookVDotNet.dll</HintPath>
+		</Reference>
+		<Reference Include="ScriptHookVDotNet2">
+			<HintPath>..\ScriptHookVDotNet\ScriptHookVDotNet2.dll</HintPath>
+		</Reference>
+		<Reference Include="ScriptHookVDotNet3">
+			<HintPath>..\ScriptHookVDotNet\ScriptHookVDotNet3.dll</HintPath>
+		</Reference>
+		<Reference Include="System.Drawing" />
+	</ItemGroup>
+
+</Project>

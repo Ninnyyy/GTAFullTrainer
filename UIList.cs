@@ -1,17 +1,21 @@
-﻿using System.Drawing;
-using GTAFullTrainer.Utils;
-using GTAFullTrainer.Effects;
+﻿using System;
+using System.Drawing;
+using NinnyTrainer.Utils;
+using NinnyTrainer.Effects;
 
-namespace GTAFullTrainer.UI
+namespace NinnyTrainer.UI
 {
     public class UIList : UIControl
     {
         public string[] Items;
         public int Index = 0;
+        public Action<int> OnListChangeLogic;
 
-        public UIList(string label, string[] items) : base(label)
+        public UIList(string label, string[] items, Action<int> callback = null)
+            : base(label)
         {
             Items = items;
+            OnListChangeLogic = callback;
         }
 
         public override void Draw(float x, float y)
@@ -19,18 +23,17 @@ namespace GTAFullTrainer.UI
             Rectangle rect = new Rectangle((int)x, (int)y, 500, 40);
 
             if (Selected)
-                GTAFullTrainer.Effects.Glow.NeonRect(rect, ThemeManager.GlowColor, Animation.Pulse());
+                Glow.NeonRect(rect, ThemeManager.GlowColor, Animation.Pulse());
 
-            DrawUtils.Text($"{Label}: {Items[Index]}",
-                rect.X + 20, rect.Y + 10,
-                0.50f,
-                Color.White);
+            DrawUtils.Text($"{Label}: {Items[Index]}", rect.X + 20, rect.Y + 10,
+                0.50f, Color.White);
         }
 
         public override void OnActivate()
         {
             Index++;
             if (Index >= Items.Length) Index = 0;
+            OnListChangeLogic?.Invoke(Index);
         }
     }
 }

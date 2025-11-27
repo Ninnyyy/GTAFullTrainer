@@ -1,4 +1,4 @@
-﻿namespace GTAFullTrainer.Plugins
+﻿namespace NinnyTrainer.Plugins
 {
     public interface ITrainerPlugin
     {

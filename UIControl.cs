@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace GTAFullTrainer.UI
+namespace NinnyTrainer.UI
 {
     public abstract class UIControl
     {

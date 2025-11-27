@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
 using GTA;
-using GTA.Native;
-using GTAFullTrainer.CoreUI;
-using GTAFullTrainer.Rendering;
-using GTAFullTrainer.UI;
-using GTAFullTrainer.Pages;
+using NinnyTrainer.CoreUI;
+using NinnyTrainer.UI;
+using NinnyTrainer.Rendering;
+using NinnyTrainer.Pages;
+using NinnyTrainer.Plugins;
 
 public class MainScript : Script
 {
@@ -12,124 +14,118 @@ public class MainScript : Script
     {
         Tick += OnTick;
         KeyUp += OnKeyUp;
-
         Interval = 0;
 
         SetupUI();
+        PluginLoader.LoadPlugins();
     }
 
     private void SetupUI()
     {
-        // Reset existing categories
         UICore.Initialize();
 
-        // ====================================================
-        // REGISTER CATEGORIES + THEIR ITEMS
-        // ====================================================
-
-        // 1. PLAYER PAGE
+        // PLAYER
         UICore.RegisterCategory("Player", new List<UIControl> {
             new UIButton("Godmode", () => PlayerPage.ToggleGod()),
-            new UIButton("Never Wanted", () => PlayerPage.ToggleWanted()),
-            new UIButton("Heal Player", () => PlayerPage.HealPlayer()),
-            new UISlider("Run Speed", 0.5f, 5.0f, 1.0f),
-            new UISlider("Swim Speed", 0.5f, 5.0f, 1.0f),
-            new UIList("Walk Style", new [] {"Default", "Gangster", "Swagger", "Injured"})
+            new UIButton("Never Wanted", () => PlayerPage.ToggleNeverWanted()),
+            new UIButton("Heal Player", () => PlayerPage.Heal()),
+            new UIList("Walk Style", new [] { "Default","Gangster","Swagger","Injured" },
+                i => PlayerPage.SetWalkStyle(i)),
+            new UISlider("Run Speed", 0.5f, 5f, 1f, v => PlayerPage.SetRunSpeed(v)),
+            new UISlider("Swim Speed", 0.5f, 5f, 1f, v => PlayerPage.SetSwimSpeed(v))
         });
 
-        // 2. VEHICLE PAGE
+        // VEHICLE
         UICore.RegisterCategory("Vehicle", new List<UIControl> {
-            new UIButton("Spawn Supercar", () => VehiclePage.SpawnSuper()),
+            new UIButton("Spawn Supercar", () => VehiclePage.SpawnSupercar()),
             new UIButton("Repair Vehicle", () => VehiclePage.Repair()),
             new UIButton("Flip Vehicle", () => VehiclePage.Flip()),
-            new UIToggle("Invincible Vehicle", false),
-            new UISlider("Torque", 0.1f, 10f, 1f),
-            new UISlider("Brake Force", 0.1f, 10f, 1f)
+            new UIToggle("Invincible Vehicle", false, s => VehiclePage.SetInvincible(s)),
+            new UISlider("Torque", 0.1f, 10f, 1f, v => VehiclePage.SetTorque(v)),
+            new UISlider("Brake Force", 0.1f, 10f, 1f, v => VehiclePage.SetBrakes(v))
         });
 
-        // 3. WEAPON MODDER PAGE
+        // WEAPON MODDER
         UICore.RegisterCategory("Weapon Modder", new List<UIControl> {
-            new UIList("Bullet Type", new [] {"Normal", "Fire", "Freeze", "Shockwave"}),
-            new UISlider("Damage Boost", 1f, 10f, 1f),
-            new UIToggle("Explosive Ammo", false),
-            new UIButton("Save Weapon Preset", () => WeaponModderPage.SavePreset()),
-            new UIButton("Load Weapon Preset", () => WeaponModderPage.LoadPreset())
+            new UIList("Bullet Type", new[] { "Normal","Fire","Freeze","Laser","Shockwave"},
+                i => WeaponModderPage.SetBulletType(i)),
+            new UISlider("Damage Multiplier", 1f, 10f, 1f,
+                v => WeaponModderPage.SetDamageMultiplier(v)),
+            new UIToggle("Explosive Ammo", false,
+                s => WeaponModderPage.SetExplosiveAmmo(s)),
+            new UIButton("Save Preset", () => WeaponModderPage.SavePreset()),
+            new UIButton("Load Preset", () => WeaponModderPage.LoadPreset())
         });
 
-        // 4. WORLD BUILDER PAGE
+        // WORLD BUILDER
         UICore.RegisterCategory("World Builder", new List<UIControl> {
             new UIButton("Select Target", () => WorldBuilderPage.SelectTarget()),
-            new UIToggle("Placement Mode", false),
-            new UIToggle("Freecam Mode", false),
+            new UIToggle("Placement Mode", false, s => WorldBuilderPage.SetPlacementMode(s)),
+            new UIToggle("Freecam Mode", false, s => WorldBuilderPage.SetFreecamMode(s)),
             new UIButton("Save Map", () => WorldBuilderPage.SaveMap()),
             new UIButton("Load Map", () => WorldBuilderPage.LoadMap()),
-            new UIButton("Clear Nearby", () => WorldBuilderPage.ClearMap())
+            new UIButton("Clear Map", () => WorldBuilderPage.ClearMap())
         });
 
-        // 5. HUD PAGE
+        // HUD
         UICore.RegisterCategory("HUD", new List<UIControl> {
-            new UIToggle("Speedometer", false),
-            new UIToggle("RPM Gauge", false),
-            new UIToggle("G-Force Meter", false),
-            new UIToggle("Compass", false),
-            new UIToggle("Health/Armor", false),
-            new UIToggle("Damage Indicator", false)
+            new UIToggle("Speedometer", false, s => HUDWidgetsPage.ToggleSpeed(s)),
+            new UIToggle("RPM Gauge", false, s => HUDWidgetsPage.ToggleRPM(s)),
+            new UIToggle("G-Force Meter", false, s => HUDWidgetsPage.ToggleGForce(s)),
+            new UIToggle("Compass", false, s => HUDWidgetsPage.ToggleCompass(s)),
+            new UIToggle("Health/Armor", false, s => HUDWidgetsPage.ToggleHealthArmor(s)),
+            new UIToggle("Damage Indicator", false, s => HUDWidgetsPage.ToggleDamage(s))
         });
 
-        // 6. THEME PAGE
+        // THEME
         UICore.RegisterCategory("Theme", new List<UIControl> {
-            new UIList("Theme", new [] {"Purple", "Blue", "Red", "Gold"}),
-            new UIToggle("Glow Effects", true),
-            new UIToggle("Sound Effects", true)
+            new UIList("Theme", new [] {"Purple","Blue","Red","Gold"},
+                i => ThemeManager.SetTheme(i)),
+            new UIToggle("Glow Effects", true, s => ThemeManager.ToggleGlow(s)),
+            new UIToggle("Sound Effects", true, s => ThemeManager.ToggleSound(s))
         });
 
-        // 7. SUPERPOWERS
+        // SUPERPOWERS
         UICore.RegisterCategory("Superpowers", new List<UIControl> {
-            new UIToggle("Flash Run", false),
-            new UIToggle("Super Jump", false),
-            new UIToggle("Time Slow", false),
-            new UISlider("Strength Multiplier", 1f, 20f, 1f)
+            new UIToggle("Flash Running", false, s => SuperpowerPage.ToggleFlash(s)),
+            new UIToggle("Super Jump", false, s => SuperpowerPage.ToggleSuperJump(s)),
+            new UIToggle("Time Slow", false, s => SuperpowerPage.ToggleTimeSlow(s)),
+            new UISlider("Strength", 1f, 20f, 1f, v => SuperpowerPage.SetStrength(v))
         });
 
-        // 8. DEV DEBUG TOOLS (optional)
+        // DEVTOOLS
         UICore.RegisterCategory("Dev Tools", new List<UIControl> {
-            new UIToggle("Show Coordinates", false),
-            new UIButton("Reload Trainer", () => ReloadTrainer()),
+            new UIToggle("Show Coordinates", false, s => DevPage.ToggleCoords(s)),
+            new UIButton("Reload Trainer", () => ReloadTrainer())
         });
     }
 
-    private void OnTick(object sender, System.EventArgs e)
+    private void ReloadTrainer()
     {
-        // Only process menu if open
+        SetupUI();
+        UICore.ActiveCategory = 0;
+        UICore.ActiveItem = 0;
+        NinnyTrainer.UI.SoundManager.PlayOpen();
+    }
+
+    private void OnTick(object sender, EventArgs e)
+    {
         UICore.Process();
 
-        // Apply logic of pages that run in background:
-        WeaponModderPage.ApplyLogic();
-        WorldBuilderPage.ApplyLogic();
-        HUDWidgetsPage.ApplyLogic();
+        WeaponModderPage.OnTick();
+        WorldBuilderPage.OnTick();
+        HUDWidgetsPage.OnTick();
     }
 
-    private void OnKeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
+    private void OnKeyUp(object sender, KeyEventArgs e)
     {
-        // Toggle menu (INSERT key)
-        if (e.KeyCode == System.Windows.Forms.Keys.Insert)
+        if (e.KeyCode == Keys.Insert)
         {
             UICore.ToggleMenu();
             return;
         }
 
-        // If menu is open → UI navigation
         if (UICore.MenuOpen)
             UICore.HandleInput();
-    }
-
-    private void ReloadTrainer()
-    {
-        // Simple reload logic
-        SetupUI();
-        UICore.ActiveCategory = 0;
-        UICore.ActiveItem = 0;
-
-        UI.SoundManager.PlayOpen();
     }
 }

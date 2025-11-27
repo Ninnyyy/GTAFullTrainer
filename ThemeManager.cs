@@ -1,33 +1,27 @@
 ﻿using System.Drawing;
 
-namespace GTAFullTrainer.UI
+namespace NinnyTrainer.UI
 {
     public static class ThemeManager
     {
-        public enum Theme
-        {
-            Purple,
-            Blue,
-            Red,
-            Gold
-        }
-
-        public static Theme CurrentTheme = Theme.Purple;
+        public static int Theme = 0; // 0=Purple,1=Blue,2=Red,3=Gold
+        public static bool GlowEnabled = true;
+        public static bool SoundEnabled = true;
 
         public static Color MainColor =>
-            CurrentTheme switch
+            Theme switch
             {
-                Theme.Blue => Color.FromArgb(120, 160, 255),
-                Theme.Red => Color.FromArgb(255, 80, 80),
-                Theme.Gold => Color.FromArgb(255, 215, 80),
+                1 => Color.FromArgb(120, 160, 255),
+                2 => Color.FromArgb(255, 80, 80),
+                3 => Color.FromArgb(255, 215, 80),
                 _ => Color.FromArgb(180, 0, 255)
             };
 
-        public static Color GlowColor => Color.FromArgb(
-            255,
-            MainColor.R,
-            MainColor.G,
-            MainColor.B
-        );
+        public static Color GlowColor =>
+            Color.FromArgb(255, MainColor.R, MainColor.G, MainColor.B);
+
+        public static void SetTheme(int i) => Theme = i;
+        public static void ToggleGlow(bool s) => GlowEnabled = s;
+        public static void ToggleSound(bool s) => SoundEnabled = s;
     }
 }
