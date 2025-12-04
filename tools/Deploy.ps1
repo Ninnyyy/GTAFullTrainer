@@ -47,6 +47,30 @@ function Get-RockstarInstallPath {
     return $null
 }
 
+function Get-EpicInstallPaths {
+    $paths = @()
+    $manifestDir = Join-Path $env:ProgramData "Epic\\EpicGamesLauncher\\Data\\Manifests"
+
+    if (Test-Path $manifestDir) {
+        foreach ($manifest in Get-ChildItem -Path $manifestDir -Filter "*.item" -ErrorAction SilentlyContinue) {
+            try {
+                $content = Get-Content $manifest.FullName -Raw | ConvertFrom-Json
+                if ($content.DisplayName -like "Grand Theft Auto V*" -or $content.AppName -like "GTAV*") {
+                    if ($content.InstallLocation) {
+                        $paths += $content.InstallLocation
+                    }
+                }
+            }
+            catch {
+                continue
+            }
+        }
+    }
+
+    $paths += "C:\\Program Files\\Epic Games\\GTAV"
+    return $paths | Where-Object { $_ }
+}
+
 function Test-StoryModeInstall {
     param(
         [Parameter(Mandatory = $true)][string]$Path
@@ -56,10 +80,17 @@ function Test-StoryModeInstall {
         return $false
     }
 
-    $gtaExe = Join-Path $Path "GTA5.exe"
-    if (-not (Test-Path $gtaExe)) {
-        return $false
+    $executables = @("GTA5.exe", "PlayGTAV.exe", "GTA5_en.exe")
+    $hasStoryModeExe = $false
+
+    foreach ($exe in $executables) {
+        if (Test-Path (Join-Path $Path $exe)) {
+            $hasStoryModeExe = $true
+            break
+        }
     }
+
+    if (-not $hasStoryModeExe) { return $false }
 
     # Avoid dropping files into FiveM or other multiplayer-focused installs
     $fivemExe = Join-Path $Path "FiveM.exe"
@@ -75,6 +106,7 @@ function Resolve-StoryModePath {
 
     $steamRoot = Get-SteamInstallPath
     $rockstarRoot = Get-RockstarInstallPath
+    $epicRoots = Get-EpicInstallPaths
 
     $candidates = @()
 
@@ -90,8 +122,18 @@ function Resolve-StoryModePath {
         $candidates += $rockstarRoot
     }
 
+    if ($epicRoots) {
+        $candidates += $epicRoots
+    }
+
     $candidates += "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Grand Theft Auto V"
     $candidates += "C:\\Program Files\\Rockstar Games\\Grand Theft Auto V"
+    $candidates += "C:\\Program Files\\Rockstar Games\\Grand Theft Auto V (Legacy)"
+    $candidates += "C:\\Program Files\\Rockstar Games\\Grand Theft Auto V (Enhanced)"
+    $candidates += "D:\\Games\\Grand Theft Auto V"
+    $candidates += "D:\\Games\\Grand Theft Auto V (Legacy)"
+    $candidates += "D:\\Games\\Grand Theft Auto V (Enhanced)"
+    $candidates += "C:\\Program Files\\Epic Games\\GTAV"
 
     foreach ($candidate in $candidates) {
         if (Test-StoryModeInstall -Path $candidate) {
