@@ -3,6 +3,8 @@
 A fully-featured, extensible, animated **GTA V trainer** designed for clean visuals, powerful tools, and a premium user experience.
 Built on a custom **Ninny Purple UI Framework**, smooth animations, plugin support, and dozens of built-in systems.
 
+For forward-looking enhancements and ambitious experiments, see [Advanced Feature Ideas](ADVANCED_IDEAS.md).
+
 > ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.
 > Using mods in GTA Online will result in a ban.
 > This project does *not* support, encourage, or condone online cheating.
