@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.Win32;
 
 namespace NinnyTrainer.Launcher;
@@ -610,11 +612,11 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
 {
     private readonly bool _verbose = verbose;
 
-    public void Info(string message) => Write("INFO", message, ConsoleTheme.Accent);
+    public void Info(string message) => Write("INFO", message, ConsoleTheme.AccentBright);
 
-    public void Warn(string message) => Write("WARN", message, ConsoleColor.Yellow);
+    public void Warn(string message) => Write("WARN", message, ConsoleTheme.Highlight);
 
-    public void Error(string message) => Write("ERROR", message, ConsoleColor.Red);
+    public void Error(string message) => Write("ERROR", message, ConsoleTheme.Alert);
 
     public void Verbose(string message)
     {
@@ -627,10 +629,12 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
     private static void Write(string prefix, string message, ConsoleColor color)
     {
         var previous = Console.ForegroundColor;
+        var previousBackground = Console.BackgroundColor;
+        Console.BackgroundColor = ConsoleTheme.Background;
         Console.ForegroundColor = color;
         var symbol = prefix switch
         {
-            "INFO" => "●",
+            "INFO" => "◆",
             "WARN" => "▲",
             "ERROR" => "✖",
             "VERBOSE" => "··",
@@ -638,6 +642,7 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
         };
         Console.WriteLine($"{DateTime.Now:HH:mm:ss} {symbol} {message}");
         Console.ForegroundColor = previous;
+        Console.BackgroundColor = previousBackground;
     }
 }
 
@@ -713,13 +718,7 @@ internal static class LauncherPresentation
 {
     public static void ShowBanner()
     {
-        var previous = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleTheme.Accent;
-        Console.WriteLine("╔════════════════════════════════════════════╗");
-        Console.WriteLine("║         Ninny Trainer Launcher v1          ║");
-        Console.WriteLine("║  Story Mode deployer • premium experience  ║");
-        Console.WriteLine("╚════════════════════════════════════════════╝");
-        Console.ForegroundColor = previous;
+        ConsoleAnimator.DrawPulseBanner();
         Console.WriteLine();
     }
 
@@ -807,8 +806,49 @@ internal static class BattleyeAdvisor
 
 internal static class ConsoleTheme
 {
-    public const ConsoleColor Accent = ConsoleColor.Cyan;
+    public const ConsoleColor AccentBright = ConsoleColor.Magenta;
+    public const ConsoleColor Accent = ConsoleColor.DarkMagenta;
+    public const ConsoleColor Highlight = ConsoleColor.Gray;
     public const ConsoleColor Muted = ConsoleColor.DarkGray;
+    public const ConsoleColor Background = ConsoleColor.Black;
+    public const ConsoleColor Alert = ConsoleColor.DarkRed;
+}
+
+internal static class ConsoleAnimator
+{
+    public static void DrawPulseBanner()
+    {
+        var frames = new List<(string line, ConsoleColor color)>
+        {
+            ("╔════════════════════════════════════════════╗", ConsoleTheme.Accent),
+            ("║     Ninny Trainer Launcher – Story Luxe     ║", ConsoleTheme.AccentBright),
+            ("║  Premium deploy • purple / charcoal glow   ║", ConsoleTheme.Highlight),
+            ("╚════════════════════════════════════════════╝", ConsoleTheme.Accent)
+        };
+
+        foreach (var frame in frames)
+        {
+            WriteAnimatedLine(frame.line, frame.color);
+        }
+    }
+
+    private static void WriteAnimatedLine(string text, ConsoleColor color)
+    {
+        var previousForeground = Console.ForegroundColor;
+        var previousBackground = Console.BackgroundColor;
+        Console.BackgroundColor = ConsoleTheme.Background;
+        Console.ForegroundColor = color;
+
+        foreach (var ch in text)
+        {
+            Console.Write(ch);
+            Thread.Sleep(4);
+        }
+
+        Console.WriteLine();
+        Console.ForegroundColor = previousForeground;
+        Console.BackgroundColor = previousBackground;
+    }
 }
 
 internal sealed record InstallHealthReport(IReadOnlyList<string> Warnings);
