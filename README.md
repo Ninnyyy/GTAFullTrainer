@@ -81,12 +81,20 @@ Everything is modular and built to be extended.
 
 1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
 2. Build this project in **Release** mode with `.NET Framework 4.8`.
-3. Run the deployment helper to copy everything into your GTA V folder. It will try to auto-detect a **Story Mode** install from Steam/Rockstar defaults, Epic manifests, and common "Legacy" / "Enhanced" paths, or you can override it with `-GamePath` if needed:
-   ```powershell
-   pwsh -File tools/Deploy.ps1
-   # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C:\Program Files\Rockstar Games\Grand Theft Auto V"
-   ```
-   This places `NinnyTrainer.dll` under `scripts/NinnyTrainer` and will also copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`. FiveM/online-only installs are skipped on purpose.
+3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode** and intentionally skip FiveM/online installs):
+   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, and walks up the repo to find `NinnyTrainer.csproj`). Publish it once, then double-click to deploy:
+     ```powershell
+     dotnet publish tools/Launcher/TrainerLauncher.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+     # run after publishing; use --verbose for detailed detection, --dry-run to simulate, --game-path to override
+     .\tools\Launcher\bin\Release\net8.0\win-x64\publish\NinnyTrainer.Launcher.exe
+     ```
+   - **PowerShell script** (same detection logic, handy for quick terminal use):
+     ```powershell
+     pwsh -File tools/Deploy.ps1
+     # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C\Program Files\Rockstar Games\Grand Theft Auto V"
+     ```
+   Both helpers place `NinnyTrainer.dll` under `scripts/NinnyTrainer` and also copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`.
+
 4. Launch GTA V (story mode only). The trainer will open its menu automatically on first load, and also logs menu events to `NinnyTrainer.log` alongside your game scripts folder.
 
 Press **INSERT** to toggle the trainer (or set your own hotkey in the trainer Settings page).
