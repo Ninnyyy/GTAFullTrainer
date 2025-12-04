@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 using GTAFullTrainer.Core;
 using GTAFullTrainer.Utils;
@@ -8,13 +8,20 @@ namespace GTAFullTrainer.UI
     public class UIKeybind : UIElement
     {
         private Keys boundKey;
-        private string configKey;
+        private readonly string configKey;
 
         public UIKeybind(string label, int index, string configName, Keys defaultKey)
             : base(label, index)
         {
             configKey = configName;
-            boundKey = defaultKey;
+            string stored = ConfigManager.Get(configKey, defaultKey.ToString());
+
+            if (!Enum.TryParse(stored, out boundKey))
+            {
+                boundKey = defaultKey;
+                ConfigManager.Set(configKey, boundKey.ToString());
+                ConfigManager.Save();
+            }
         }
 
         public override void Draw(int x, int y)
@@ -28,7 +35,7 @@ namespace GTAFullTrainer.UI
 
         public override void Activate()
         {
-            InputManager.CaptureKey((k) =>
+            InputManager.CaptureKey(k =>
             {
                 boundKey = k;
                 ConfigManager.Set(configKey, k.ToString());
