@@ -12,7 +12,8 @@ internal sealed class Program
         var options = DeploymentOptions.Parse(args);
         var logger = new ConsoleLogger(options.Verbose);
 
-        logger.Info("--- Ninny Trainer Launcher ---");
+        LauncherPresentation.ShowBanner();
+
         logger.Info("Looking for project root...");
 
         var projectRoot = options.ProjectRoot ?? PathFinder.FindProjectRoot();
@@ -42,11 +43,12 @@ internal sealed class Program
 
         logger.Info($"Story Mode folder: {storyModePath}");
 
+        BattleyeAdvisor.Report(logger);
+
         var copier = new DeploymentCopier(projectRoot, buildOutput, storyModePath, logger, options.DryRun);
         var result = copier.Copy();
 
-        logger.Info(string.Empty);
-        logger.Info($"Deployment {(options.DryRun ? "simulated" : "completed")}. Trainer DLLs: {result.TrainerDllsCopied}, Plugins: {result.PluginDllsCopied}, Configs: {result.ConfigsCopied}.");
+        LauncherPresentation.ShowSummary(result, options.DryRun, logger);
         return 0;
     }
 }
@@ -417,7 +419,7 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
 {
     private readonly bool _verbose = verbose;
 
-    public void Info(string message) => Write("INFO", message, Console.ForegroundColor);
+    public void Info(string message) => Write("INFO", message, ConsoleTheme.Accent);
 
     public void Warn(string message) => Write("WARN", message, ConsoleColor.Yellow);
 
@@ -427,7 +429,7 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
     {
         if (_verbose)
         {
-            Write("VERBOSE", message, ConsoleColor.DarkGray);
+            Write("VERBOSE", message, ConsoleTheme.Muted);
         }
     }
 
@@ -435,7 +437,74 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
     {
         var previous = Console.ForegroundColor;
         Console.ForegroundColor = color;
-        Console.WriteLine($"[{prefix}] {message}");
+        var symbol = prefix switch
+        {
+            "INFO" => "●",
+            "WARN" => "▲",
+            "ERROR" => "✖",
+            "VERBOSE" => "··",
+            _ => "•"
+        };
+        Console.WriteLine($"{DateTime.Now:HH:mm:ss} {symbol} {message}");
         Console.ForegroundColor = previous;
     }
+}
+
+internal static class LauncherPresentation
+{
+    public static void ShowBanner()
+    {
+        var previous = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleTheme.Accent;
+        Console.WriteLine("╔════════════════════════════════════════════╗");
+        Console.WriteLine("║         Ninny Trainer Launcher v1          ║");
+        Console.WriteLine("║    Story Mode deployer • polished build    ║");
+        Console.WriteLine("╚════════════════════════════════════════════╝");
+        Console.ForegroundColor = previous;
+        Console.WriteLine();
+    }
+
+    public static void ShowSummary(DeploymentResult result, bool dryRun, ILogger logger)
+    {
+        logger.Info(string.Empty);
+        var status = dryRun ? "Simulated" : "Completed";
+        logger.Info($"Deployment {status}:");
+        logger.Info($"   ✓ Trainer DLLs: {result.TrainerDllsCopied}");
+        logger.Info($"   ✓ Plugins:     {result.PluginDllsCopied}");
+        logger.Info($"   ✓ Configs:     {result.ConfigsCopied}");
+        logger.Info("----------------------------------------------");
+        logger.Info("You can now launch GTA V Story Mode and open the trainer menu.");
+    }
+}
+
+internal static class BattleyeAdvisor
+{
+    public static void Report(ILogger logger)
+    {
+        var settingsPaths = new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Rockstar Games", "Launcher", "settings.json"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Rockstar Games", "Launcher", "settings.json")
+        };
+
+        var foundSetting = settingsPaths.FirstOrDefault(File.Exists);
+        if (foundSetting is not null)
+        {
+            logger.Verbose($"Found Rockstar Launcher settings at {foundSetting}.");
+            var contents = File.ReadAllText(foundSetting);
+            if (contents.Contains("battl", StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Info("Rockstar Launcher settings mention BattlEye. GTA V Story Mode does not start BattlEye, so no toggle is needed. Leaving settings untouched.");
+                return;
+            }
+        }
+
+        logger.Info("No BattlEye toggles detected. GTA V Story Mode runs offline without BattlEye, so nothing extra is required.");
+    }
+}
+
+internal static class ConsoleTheme
+{
+    public const ConsoleColor Accent = ConsoleColor.Cyan;
+    public const ConsoleColor Muted = ConsoleColor.DarkGray;
 }

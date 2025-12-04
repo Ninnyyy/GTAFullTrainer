@@ -81,8 +81,8 @@ Everything is modular and built to be extended.
 
 1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
 2. Build this project in **Release** mode with `.NET Framework 4.8`.
-3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode** and intentionally skip FiveM/online installs):
-   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, and walks up the repo to find `NinnyTrainer.csproj`). Publish it once, then double-click to deploy:
+3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode**, intentionally skip FiveM/online installs, and will note that BattlEye isn’t used for Story Mode):
+   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, walks up the repo to find `NinnyTrainer.csproj`, and prints a premium, colorized status/summary):
      ```powershell
      dotnet publish tools/Launcher/TrainerLauncher.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
      # run after publishing; use --verbose for detailed detection, --dry-run to simulate, --game-path to override
