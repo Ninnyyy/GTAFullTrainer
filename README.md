@@ -1,11 +1,13 @@
 # 💜 Ninny Trainer — A Modern GTA V Single-Player Framework
 
-A fully-featured, extensible, animated **GTA V trainer** designed for clean visuals, powerful tools, and a premium user experience.  
+A fully-featured, extensible, animated **GTA V trainer** designed for clean visuals, powerful tools, and a premium user experience.
 Built on a custom **Ninny Purple UI Framework**, smooth animations, plugin support, and dozens of built-in systems.
 
-> ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.  
-Using mods in GTA Online will result in a ban.  
-This project does *not* support, encourage, or condone online cheating.
+For forward-looking enhancements and ambitious experiments, see [Advanced Feature Ideas](ADVANCED_IDEAS.md).
+
+> ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.
+> Using mods in GTA Online will result in a ban.
+> This project does *not* support, encourage, or condone online cheating.
 
 ---
 
@@ -21,26 +23,26 @@ This project does *not* support, encourage, or condone online cheating.
 - Sound effects (navigate, select, open, close)
 
 ### ⚔ Player Tools
-- Godmode  
-- Heal player  
-- Never wanted  
-- Walkstyle selector  
-- Speed modifiers  
+- Godmode
+- Heal player
+- Never wanted
+- Walkstyle selector
+- Speed modifiers
 
 ### 🚗 Vehicle Tools
-- Spawn vehicles  
-- Repair / flip  
-- Invincibility  
-- Torque & brake tuning  
+- Spawn vehicles
+- Repair / flip
+- Invincibility
+- Torque & brake tuning
 
 ### 🔫 Weapon Modder
-- Laser bullets  
-- Freeze bullets  
-- Fire rounds  
-- Shockwave blast  
-- Damage multipliers  
-- Attachment toggles  
-- Preset save/load system  
+- Laser bullets
+- Freeze bullets
+- Fire rounds
+- Shockwave blast
+- Damage multipliers
+- Attachment toggles
+- Preset save/load system
 
 ### 🧱 World Builder / Map Editor
 - Select entities
@@ -54,12 +56,12 @@ This project does *not* support, encourage, or condone online cheating.
 - Clear world
 
 ### 🧭 HUD Overlays
-- Speedometer  
-- RPM gauge  
-- G-force meter  
-- Compass  
-- Damage indicator  
-- Health / armor bars  
+- Speedometer
+- RPM gauge
+- G-force meter
+- Compass
+- Damage indicator
+- Health / armor bars
 
 ### 🧩 Add-On Plugin API
 - Add pages dynamically
@@ -71,26 +73,46 @@ This project does *not* support, encourage, or condone online cheating.
 
 ## 📁 Project Structure
 
-
 Everything is modular and built to be extended.
 
 ---
 
 ## ▶️ How to Install (Player)
 
-1. Install **ScriptHookV**  
-2. Install **ScriptHookVDotNet**  
-3. Build this project (`Release` mode)
-4. Copy the **NinnyTrainer.dll** into:
-5. Launch GTA V (story mode)
+1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
+2. Build this project in **Release** mode with `.NET Framework 4.8`.
+3. Run the deployment helper to copy everything into your GTA V folder. It will try to auto-detect a **Story Mode** install from Steam/Rockstar defaults and registry entries, or you can override it with `-GamePath` if needed:
+   ```powershell
+   pwsh -File tools/Deploy.ps1
+   # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C:\Program Files\Rockstar Games\Grand Theft Auto V"
+   ```
+   This places `NinnyTrainer.dll` under `scripts/NinnyTrainer` and will also copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`. FiveM/online-only installs are skipped on purpose.
+4. Launch GTA V (story mode only).
 
-Press **INSERT** to open the trainer.
+Press **INSERT** to open the trainer (or set your own hotkey in the trainer Settings page).
 
 ---
 
 ## 🧩 Create Your Own Add-On Plugin
 
-Drop a `.dll` into:
+Drop a compiled `.dll` into: `Grand Theft Auto V/scripts/NinnyTrainer/Plugins`.
+
+**Quick-start example** (see `Examples/SamplePlugin.cs` for a full file):
+```csharp
+using NinnyTrainer.Plugins;
+
+public class HelloWorldPlugin : ITrainerPlugin
+{
+    public void Initialize()
+    {
+        GTA.UI.Notify("~p~Hello from my plugin!");
+    }
+}
+```
+
+Build the plugin as a **Class Library targeting .NET Framework 4.8**, copy the output `.dll` into the `Plugins` folder, and restart/reload the trainer.
+
+---
 
 🛡 License
 

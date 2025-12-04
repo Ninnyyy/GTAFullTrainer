@@ -1,5 +1,4 @@
-﻿using GTA;
-using GTA.Native;
+using GTA;
 using GTA.UI;
 using System;
 using System.Windows.Forms;
@@ -20,16 +19,22 @@ namespace GTAFullTrainer.Core
             Tick += OnTick;
             KeyUp += OnKeyUp;
 
-            
             ConfigManager.Load();
 
-           
-            string loadedKey = ConfigManager.Get("OpenMenuKey", "Insert");
+            string loadedKey = ConfigManager.Get("OpenMenuKey", Keys.Insert.ToString());
 
             if (Enum.TryParse(loadedKey, out Keys parsedKey))
+            {
                 openMenuKey = parsedKey;
+            }
+            else
+            {
+                openMenuKey = Keys.Insert;
+            }
 
-            
+            ConfigManager.Set("OpenMenuKey", openMenuKey.ToString());
+            ConfigManager.Save();
+
             Theme.Initialize();
             MenuEngine.Initialize();
             InputManager.Initialize();
@@ -39,10 +44,8 @@ namespace GTAFullTrainer.Core
 
         private void OnTick(object sender, EventArgs e)
         {
-          
             InputManager.Update();
 
-            
             if (menuVisible)
                 MenuEngine.Update();
         }
@@ -61,12 +64,14 @@ namespace GTAFullTrainer.Core
                 {
                     MenuEngine.CloseMenu();
                 }
-            
+            }
+        }
 
-        
         public void SetOpenKey(Keys newKey)
         {
             openMenuKey = newKey;
             ConfigManager.Set("OpenMenuKey", newKey.ToString());
             ConfigManager.Save();
         }
+    }
+}
