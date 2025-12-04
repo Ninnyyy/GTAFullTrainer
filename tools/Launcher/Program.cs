@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using Microsoft.Win32;
@@ -143,21 +145,24 @@ internal sealed class LauncherWorkflow
     {
         _logger.Info("Looking for project root...");
         var projectRoot = _options.ProjectRoot ?? PathFinder.FindProjectRoot();
-        if (string.IsNullOrWhiteSpace(projectRoot))
+        if (!string.IsNullOrWhiteSpace(projectRoot))
         {
-            _logger.Error("Unable to locate the project root (tried to find NinnyTrainer.csproj upwards from the launcher).");
-            return LauncherResult.Failure(_logPath, null, null, null);
+            _logger.Info($"Project root: {projectRoot}");
         }
-
-        _logger.Info($"Project root: {projectRoot}");
+        else
+        {
+            _logger.Warn("Project root not found; expecting trainer payload next to the launcher.");
+        }
 
         var buildConfiguration = _options.BuildConfiguration ?? "Release";
-        var buildOutput = Path.Combine(projectRoot, "bin", buildConfiguration);
-        if (!Directory.Exists(buildOutput))
+        var buildOutput = BuildOutputLocator.Resolve(projectRoot, buildConfiguration, _logger);
+        if (string.IsNullOrWhiteSpace(buildOutput))
         {
-            _logger.Error($"Build output not found at {buildOutput}. Build the trainer first (dotnet build -c {buildConfiguration}).");
+            _logger.Error("Unable to locate trainer binaries. Build the project or run the launcher next to a payload folder containing NinnyTrainer.dll.");
             return LauncherResult.Failure(_logPath, projectRoot, null, null);
         }
+
+        _logger.Info($"Using trainer binaries from: {buildOutput}");
 
         _logger.Info("Searching for GTA V Story Mode...");
         var storyModePath = _options.GamePath ?? StoryModeLocator.ResolveStoryModePath(_logger);
@@ -230,9 +235,9 @@ internal sealed class DeploymentCopier
     private readonly ILogger _logger;
     private readonly bool _dryRun;
 
-    public DeploymentCopier(string projectRoot, string buildOutput, string storyModePath, ILogger logger, bool dryRun)
+    public DeploymentCopier(string? projectRoot, string buildOutput, string storyModePath, ILogger logger, bool dryRun)
     {
-        _projectRoot = projectRoot;
+        _projectRoot = string.IsNullOrWhiteSpace(projectRoot) ? buildOutput : projectRoot;
         _buildOutput = buildOutput;
         _storyModePath = storyModePath;
         _logger = logger;
@@ -337,6 +342,66 @@ internal static class PathFinder
             }
 
             current = current.Parent;
+        }
+
+        return null;
+    }
+}
+
+internal static class BuildOutputLocator
+{
+    public static string? Resolve(string? projectRoot, string buildConfiguration, ILogger logger)
+    {
+        var candidates = new List<string>();
+        var assemblyDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        if (!string.IsNullOrWhiteSpace(projectRoot))
+        {
+            candidates.Add(Path.Combine(projectRoot, "bin", buildConfiguration));
+        }
+
+        var repoRoot = TryFindRepoRoot(assemblyDir);
+        if (repoRoot is not null)
+        {
+            logger.Verbose($"Detected repository root near launcher: {repoRoot}");
+            candidates.Add(Path.Combine(repoRoot, "bin", buildConfiguration));
+        }
+
+        candidates.Add(Path.Combine(assemblyDir, "payload", "bin", buildConfiguration));
+        candidates.Add(assemblyDir);
+
+        foreach (var candidate in candidates)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            var trainerDll = Path.Combine(candidate, "NinnyTrainer.dll");
+            if (File.Exists(trainerDll))
+            {
+                logger.Verbose($"Found trainer payload at {trainerDll}");
+                return candidate;
+            }
+
+            logger.Verbose($"No trainer DLL found in {candidate}");
+        }
+
+        return null;
+    }
+
+    private static string? TryFindRepoRoot(string assemblyDir)
+    {
+        var dir = new DirectoryInfo(assemblyDir);
+        for (int i = 0; i < 6 && dir != null; i++)
+        {
+            var csproj = Path.Combine(dir.FullName, "NinnyTrainer.csproj");
+            if (File.Exists(csproj))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
         }
 
         return null;

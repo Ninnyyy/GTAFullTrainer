@@ -94,6 +94,11 @@ Everything is modular and built to be extended.
      #   --game-path         override the Story Mode install folder
      .\tools\Launcher\bin\Release\net8.0\win-x64\publish\NinnyTrainer.Launcher.exe
      ```
+     To ship a GitHub release asset, run the helper to publish and stage a bundled payload next to the EXE (the launcher now auto-detects a `payload/bin/<config>` folder beside itself, so players don’t need source files):
+     ```powershell
+     pwsh -File tools/Launcher/PublishLauncher.ps1 -Configuration Release -Runtime win-x64
+     # Upload dist/win-x64/NinnyTrainer.Launcher.exe and the dist/win-x64/payload folder to your release assets.
+     ```
    - **PowerShell script** (same detection logic, handy for quick terminal use):
      ```powershell
      pwsh -File tools/Deploy.ps1
