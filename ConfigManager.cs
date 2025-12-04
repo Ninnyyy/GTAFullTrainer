@@ -63,6 +63,12 @@ namespace GTAFullTrainer.Core
                 lines.Add($"{pair.Key}={pair.Value}");
             }
 
+            string? directory = Path.GetDirectoryName(configPath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             File.WriteAllLines(configPath, lines.ToArray());
         }
     }
