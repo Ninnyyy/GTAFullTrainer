@@ -10,50 +10,35 @@ internal sealed class Program
     private static int Main(string[] args)
     {
         var options = DeploymentOptions.Parse(args);
-        var logger = new ConsoleLogger(options.Verbose);
+        var loggerBundle = LoggerFactory.Create(options);
+        var logger = loggerBundle.Logger;
 
         LauncherPresentation.ShowBanner();
 
-        logger.Info("Looking for project root...");
-
-        var projectRoot = options.ProjectRoot ?? PathFinder.FindProjectRoot();
-        if (string.IsNullOrWhiteSpace(projectRoot))
+        try
         {
-            logger.Error("Unable to locate the project root (tried to find NinnyTrainer.csproj upwards from the launcher).");
+            var workflow = new LauncherWorkflow(options, logger, loggerBundle.LogPath);
+            var result = workflow.Run();
+            LauncherPresentation.ShowSummary(result, options.DryRun, logger);
+            return result.Success ? 0 : 1;
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"Unexpected launcher failure: {ex.Message}");
             return 1;
         }
-
-        logger.Info($"Project root: {projectRoot}");
-
-        var buildConfiguration = options.BuildConfiguration ?? "Release";
-        var buildOutput = Path.Combine(projectRoot, "bin", buildConfiguration);
-        if (!Directory.Exists(buildOutput))
-        {
-            logger.Error($"Build output not found at {buildOutput}. Build the trainer first (dotnet build -c {buildConfiguration}).");
-            return 1;
-        }
-
-        logger.Info($"Searching for GTA V Story Mode...");
-        var storyModePath = options.GamePath ?? StoryModeLocator.ResolveStoryModePath(logger);
-        if (string.IsNullOrWhiteSpace(storyModePath))
-        {
-            logger.Error("Unable to locate a GTA V Story Mode installation. Use --game-path to point at the folder that contains GTA5.exe.");
-            return 1;
-        }
-
-        logger.Info($"Story Mode folder: {storyModePath}");
-
-        BattleyeAdvisor.Report(logger);
-
-        var copier = new DeploymentCopier(projectRoot, buildOutput, storyModePath, logger, options.DryRun);
-        var result = copier.Copy();
-
-        LauncherPresentation.ShowSummary(result, options.DryRun, logger);
-        return 0;
     }
 }
 
-internal sealed record DeploymentOptions(string? GamePath, string? BuildConfiguration, bool DryRun, bool Verbose, string? ProjectRoot)
+internal sealed record DeploymentOptions(
+    string? GamePath,
+    string? BuildConfiguration,
+    bool DryRun,
+    bool Verbose,
+    string? ProjectRoot,
+    bool LaunchGame,
+    string? LogFile,
+    string? SummaryFile)
 {
     public static DeploymentOptions Parse(string[] args)
     {
@@ -62,6 +47,9 @@ internal sealed record DeploymentOptions(string? GamePath, string? BuildConfigur
         string? projectRoot = null;
         var dryRun = false;
         var verbose = false;
+        var launchGame = false;
+        string? logFile = null;
+        string? summaryFile = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -85,6 +73,15 @@ internal sealed record DeploymentOptions(string? GamePath, string? BuildConfigur
                 case "--verbose":
                     verbose = true;
                     break;
+                case "--launch-game":
+                    launchGame = true;
+                    break;
+                case "--log-file":
+                    logFile = NextArg(args, ref i, "log file path");
+                    break;
+                case "--summary-file":
+                    summaryFile = NextArg(args, ref i, "summary file path");
+                    break;
                 case "--help":
                 case "-h":
                     PrintHelp();
@@ -95,7 +92,7 @@ internal sealed record DeploymentOptions(string? GamePath, string? BuildConfigur
             }
         }
 
-        return new DeploymentOptions(gamePath, buildConfiguration, dryRun, verbose, projectRoot);
+        return new DeploymentOptions(gamePath, buildConfiguration, dryRun, verbose, projectRoot, launchGame, logFile, summaryFile);
     }
 
     private static string NextArg(IReadOnlyList<string> args, ref int index, string name)
@@ -118,9 +115,108 @@ internal sealed record DeploymentOptions(string? GamePath, string? BuildConfigur
         Console.WriteLine("  -g, --game-path <path>       Override Story Mode directory (folder containing GTA5.exe)");
         Console.WriteLine("  -c, --build-config <name>    Build configuration to pull from bin/<name> (default Release)");
         Console.WriteLine("  -p, --project-root <path>    Override project root (auto-detected by default)");
+        Console.WriteLine("      --launch-game            Launch GTA V Story Mode immediately after deployment");
+        Console.WriteLine("      --log-file <path>        Save a copy of the launcher output to a custom path");
+        Console.WriteLine("      --summary-file <path>    Save a JSON summary of the deployment to a path (default: logs folder)");
         Console.WriteLine("      --dry-run                Simulate copy operations without writing files");
         Console.WriteLine("      --verbose                Print detailed detection and copy steps");
         Console.WriteLine("  -h, --help                   Show this help");
+    }
+}
+
+internal sealed class LauncherWorkflow
+{
+    private readonly DeploymentOptions _options;
+    private readonly ILogger _logger;
+    private readonly string _logPath;
+
+    public LauncherWorkflow(DeploymentOptions options, ILogger logger, string logPath)
+    {
+        _options = options;
+        _logger = logger;
+        _logPath = logPath;
+    }
+
+    public LauncherResult Run()
+    {
+        _logger.Info("Looking for project root...");
+        var projectRoot = _options.ProjectRoot ?? PathFinder.FindProjectRoot();
+        if (string.IsNullOrWhiteSpace(projectRoot))
+        {
+            _logger.Error("Unable to locate the project root (tried to find NinnyTrainer.csproj upwards from the launcher).");
+            return LauncherResult.Failure(_logPath, null, null, null);
+        }
+
+        _logger.Info($"Project root: {projectRoot}");
+
+        var buildConfiguration = _options.BuildConfiguration ?? "Release";
+        var buildOutput = Path.Combine(projectRoot, "bin", buildConfiguration);
+        if (!Directory.Exists(buildOutput))
+        {
+            _logger.Error($"Build output not found at {buildOutput}. Build the trainer first (dotnet build -c {buildConfiguration}).");
+            return LauncherResult.Failure(_logPath, projectRoot, null, null);
+        }
+
+        _logger.Info("Searching for GTA V Story Mode...");
+        var storyModePath = _options.GamePath ?? StoryModeLocator.ResolveStoryModePath(_logger);
+        if (string.IsNullOrWhiteSpace(storyModePath))
+        {
+            _logger.Error("Unable to locate a GTA V Story Mode installation. Use --game-path to point at the folder that contains GTA5.exe.");
+            return LauncherResult.Failure(_logPath, projectRoot, buildOutput, null);
+        }
+
+        var storyModeFullPath = Path.GetFullPath(storyModePath);
+        _logger.Info($"Story Mode folder: {storyModeFullPath}");
+
+        var healthReport = InstallHealthCheck.Run(storyModeFullPath, _logger);
+        BattleyeAdvisor.Report(_logger);
+
+        var copier = new DeploymentCopier(projectRoot, buildOutput, storyModeFullPath, _logger, _options.DryRun);
+        var copyResult = copier.Copy();
+
+        var summaryPath = SummaryExporter.TryWrite(_options.SummaryFile, storyModeFullPath, buildOutput, copyResult, healthReport, _logPath, _logger, _options.DryRun);
+
+        var launchResult = LaunchGameIfRequested(storyModeFullPath, _options.LaunchGame, _options.DryRun);
+
+        return LauncherResult.Successful(copyResult, healthReport, storyModeFullPath, buildOutput, _logPath, summaryPath, launchResult);
+    }
+
+    private LaunchResult LaunchGameIfRequested(string storyModePath, bool launchGame, bool dryRun)
+    {
+        if (!launchGame)
+        {
+            return LaunchResult.Skipped("Launch not requested.");
+        }
+
+        var executable = StoryModeLocator.ResolveExecutable(storyModePath);
+        if (executable is null)
+        {
+            _logger.Warn("Launch requested, but GTA V executable was not found in the detected Story Mode path.");
+            return LaunchResult.Failed("GTA5.exe missing");
+        }
+
+        _logger.Info($"Launching GTA V Story Mode from {executable}...");
+        if (dryRun)
+        {
+            _logger.Info("(dry run) Would start GTA5.exe after deployment");
+            return LaunchResult.Skipped("Dry run");
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = executable,
+                WorkingDirectory = Path.GetDirectoryName(executable) ?? storyModePath
+            });
+            _logger.Info("GTA V launch triggered. Story Mode will open with the trainer files in place.");
+            return LaunchResult.Started(executable);
+        }
+        catch (Exception ex)
+        {
+            _logger.Warn($"Failed to start GTA V automatically: {ex.Message}");
+            return LaunchResult.Failed(ex.Message);
+        }
     }
 }
 
@@ -265,6 +361,14 @@ internal static class StoryModeLocator
         return null;
     }
 
+    public static string? ResolveExecutable(string storyModePath)
+    {
+        var executables = new[] { "GTA5.exe", "PlayGTAV.exe", "GTA5_en.exe" };
+        return executables
+            .Select(exe => Path.Combine(storyModePath, exe))
+            .FirstOrDefault(File.Exists);
+    }
+
     private static IEnumerable<string> EnumerateCandidates(ILogger logger)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -407,6 +511,62 @@ internal static class EpicLocator
     }
 }
 
+internal static class InstallHealthCheck
+{
+    private static readonly (string FileName, string Message)[] RequiredFiles =
+    {
+        ("ScriptHookV.dll", "ScriptHookV not found. Install Alexander Blade's ScriptHookV into the GTA V root."),
+        ("ScriptHookVDotNet.asi", "ScriptHookVDotNet.asi missing. Install ScriptHookVDotNet so the trainer can load."),
+        ("dinput8.dll", "dinput8.dll missing. Ensure the ScriptHookV package is fully extracted.")
+    };
+
+    public static InstallHealthReport Run(string storyModePath, ILogger logger)
+    {
+        var warnings = new List<string>();
+
+        foreach (var (fileName, message) in RequiredFiles)
+        {
+            var candidate = Path.Combine(storyModePath, fileName);
+            if (!File.Exists(candidate))
+            {
+                warnings.Add(message);
+                logger.Warn(message);
+            }
+        }
+
+        var scriptsFolder = Path.Combine(storyModePath, "scripts");
+        if (!Directory.Exists(scriptsFolder))
+        {
+            var warning = "scripts folder not found; it will be created during deployment.";
+            warnings.Add(warning);
+            logger.Warn(warning);
+        }
+        else if (!IsWritable(scriptsFolder))
+        {
+            var warning = "scripts folder is not writable. Run the launcher elevated or adjust permissions.";
+            warnings.Add(warning);
+            logger.Warn(warning);
+        }
+
+        return new InstallHealthReport(warnings);
+    }
+
+    private static bool IsWritable(string path)
+    {
+        try
+        {
+            var testFile = Path.Combine(path, $".nt_writetest_{Guid.NewGuid():N}.tmp");
+            File.WriteAllText(testFile, "ok");
+            File.Delete(testFile);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
 internal interface ILogger
 {
     void Info(string message);
@@ -414,6 +574,37 @@ internal interface ILogger
     void Error(string message);
     void Verbose(string message);
 }
+
+internal static class LoggerFactory
+{
+    public static LoggerBundle Create(DeploymentOptions options)
+    {
+        var logPath = ResolveLogPath(options.LogFile);
+        var loggers = new List<ILogger> { new ConsoleLogger(options.Verbose), new FileLogger(options.Verbose, logPath) };
+        return new LoggerBundle(new CompositeLogger(loggers), logPath);
+    }
+
+    private static string ResolveLogPath(string? userPath)
+    {
+        if (!string.IsNullOrWhiteSpace(userPath))
+        {
+            var targetDir = Path.GetDirectoryName(userPath);
+            if (string.IsNullOrWhiteSpace(targetDir))
+            {
+                targetDir = Directory.GetCurrentDirectory();
+            }
+
+            Directory.CreateDirectory(targetDir);
+            return Path.GetFullPath(Path.Combine(targetDir, Path.GetFileName(userPath)));
+        }
+
+        var defaultDir = Path.Combine(AppContext.BaseDirectory, "logs");
+        Directory.CreateDirectory(defaultDir);
+        return Path.Combine(defaultDir, $"NinnyLauncher-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+    }
+}
+
+internal sealed record LoggerBundle(ILogger Logger, string LogPath);
 
 internal sealed class ConsoleLogger(bool verbose) : ILogger
 {
@@ -450,6 +641,74 @@ internal sealed class ConsoleLogger(bool verbose) : ILogger
     }
 }
 
+internal sealed class FileLogger(bool verbose, string logPath) : ILogger
+{
+    private readonly bool _verbose = verbose;
+    private readonly string _logPath = logPath;
+
+    public void Info(string message) => Write("INFO", message);
+
+    public void Warn(string message) => Write("WARN", message);
+
+    public void Error(string message) => Write("ERROR", message);
+
+    public void Verbose(string message)
+    {
+        if (_verbose)
+        {
+            Write("VERBOSE", message);
+        }
+    }
+
+    private void Write(string prefix, string message)
+    {
+        var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{prefix}] {message}{Environment.NewLine}";
+        File.AppendAllText(_logPath, line);
+    }
+}
+
+internal sealed class CompositeLogger : ILogger
+{
+    private readonly IReadOnlyList<ILogger> _loggers;
+
+    public CompositeLogger(IReadOnlyList<ILogger> loggers)
+    {
+        _loggers = loggers;
+    }
+
+    public void Info(string message)
+    {
+        foreach (var logger in _loggers)
+        {
+            logger.Info(message);
+        }
+    }
+
+    public void Warn(string message)
+    {
+        foreach (var logger in _loggers)
+        {
+            logger.Warn(message);
+        }
+    }
+
+    public void Error(string message)
+    {
+        foreach (var logger in _loggers)
+        {
+            logger.Error(message);
+        }
+    }
+
+    public void Verbose(string message)
+    {
+        foreach (var logger in _loggers)
+        {
+            logger.Verbose(message);
+        }
+    }
+}
+
 internal static class LauncherPresentation
 {
     public static void ShowBanner()
@@ -458,21 +717,64 @@ internal static class LauncherPresentation
         Console.ForegroundColor = ConsoleTheme.Accent;
         Console.WriteLine("╔════════════════════════════════════════════╗");
         Console.WriteLine("║         Ninny Trainer Launcher v1          ║");
-        Console.WriteLine("║    Story Mode deployer • polished build    ║");
+        Console.WriteLine("║  Story Mode deployer • premium experience  ║");
         Console.WriteLine("╚════════════════════════════════════════════╝");
         Console.ForegroundColor = previous;
         Console.WriteLine();
     }
 
-    public static void ShowSummary(DeploymentResult result, bool dryRun, ILogger logger)
+    public static void ShowSummary(LauncherResult result, bool dryRun, ILogger logger)
     {
         logger.Info(string.Empty);
-        var status = dryRun ? "Simulated" : "Completed";
+        var status = result.Success ? (dryRun ? "Simulated" : "Completed") : "Failed";
         logger.Info($"Deployment {status}:");
-        logger.Info($"   ✓ Trainer DLLs: {result.TrainerDllsCopied}");
-        logger.Info($"   ✓ Plugins:     {result.PluginDllsCopied}");
-        logger.Info($"   ✓ Configs:     {result.ConfigsCopied}");
+        logger.Info($"   ✓ Trainer DLLs: {result.CopyResult.TrainerDllsCopied}");
+        logger.Info($"   ✓ Plugins:     {result.CopyResult.PluginDllsCopied}");
+        logger.Info($"   ✓ Configs:     {result.CopyResult.ConfigsCopied}");
+
+        if (!result.Success)
+        {
+            logger.Warn("Launcher exited early. Check the log for details and rerun when ready.");
+            logger.Info($"Logs:    {result.LogPath}");
+            if (!string.IsNullOrWhiteSpace(result.SummaryPath))
+            {
+                logger.Info($"Summary: {result.SummaryPath}");
+            }
+            return;
+        }
+
+        if (result.HealthReport.Warnings.Count > 0)
+        {
+            logger.Warn("Health checks: review the warnings below (Story Mode can still run):");
+            foreach (var warning in result.HealthReport.Warnings)
+            {
+                logger.Warn($"   - {warning}");
+            }
+        }
+        else
+        {
+            logger.Info("Health checks: all essentials detected.");
+        }
+
+        if (result.LaunchResult.Status == LaunchStatus.Started)
+        {
+            logger.Info("Launch: GTA V Story Mode start triggered.");
+        }
+        else if (result.LaunchResult.Status == LaunchStatus.Skipped)
+        {
+            logger.Info($"Launch: skipped ({result.LaunchResult.Reason})");
+        }
+        else
+        {
+            logger.Warn($"Launch: could not start GTA V automatically ({result.LaunchResult.Reason})");
+        }
+
         logger.Info("----------------------------------------------");
+        logger.Info($"Logs:    {result.LogPath}");
+        if (!string.IsNullOrWhiteSpace(result.SummaryPath))
+        {
+            logger.Info($"Summary: {result.SummaryPath}");
+        }
         logger.Info("You can now launch GTA V Story Mode and open the trainer menu.");
     }
 }
@@ -507,4 +809,93 @@ internal static class ConsoleTheme
 {
     public const ConsoleColor Accent = ConsoleColor.Cyan;
     public const ConsoleColor Muted = ConsoleColor.DarkGray;
+}
+
+internal sealed record InstallHealthReport(IReadOnlyList<string> Warnings);
+
+internal sealed record LaunchResult(LaunchStatus Status, string? Reason, string? Executable)
+{
+    public static LaunchResult Skipped(string? reason) => new(LaunchStatus.Skipped, reason, null);
+    public static LaunchResult Failed(string? reason) => new(LaunchStatus.Failed, reason, null);
+    public static LaunchResult Started(string executable) => new(LaunchStatus.Started, null, executable);
+}
+
+internal enum LaunchStatus
+{
+    Skipped,
+    Started,
+    Failed
+}
+
+internal sealed record LauncherResult(
+    bool Success,
+    DeploymentResult CopyResult,
+    InstallHealthReport HealthReport,
+    string? StoryModePath,
+    string? BuildOutput,
+    string LogPath,
+    string? SummaryPath,
+    LaunchResult LaunchResult)
+{
+    public static LauncherResult Successful(DeploymentResult copy, InstallHealthReport health, string storyModePath, string buildOutput, string logPath, string? summaryPath, LaunchResult launch) =>
+        new(true, copy, health, storyModePath, buildOutput, logPath, summaryPath, launch);
+
+    public static LauncherResult Failure(string logPath, string? projectRoot, string? buildOutput, string? storyModePath) =>
+        new(false, new DeploymentResult(0, 0, 0), new InstallHealthReport(Array.Empty<string>()), storyModePath ?? projectRoot, buildOutput, logPath, null, LaunchResult.Skipped("failed early"));
+}
+
+internal static class SummaryExporter
+{
+    public static string? TryWrite(string? userPath, string storyModePath, string buildOutput, DeploymentResult copy, InstallHealthReport health, string logPath, ILogger logger, bool dryRun)
+    {
+        var summaryPath = ResolveSummaryPath(userPath);
+        var payload = new
+        {
+            GeneratedAt = DateTime.Now,
+            StoryModePath = storyModePath,
+            BuildOutput = buildOutput,
+            Copy = new
+            {
+                copy.TrainerDllsCopied,
+                copy.PluginDllsCopied,
+                copy.ConfigsCopied,
+                DryRun = dryRun
+            },
+            HealthWarnings = health.Warnings,
+            LogPath = logPath
+        };
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(summaryPath)!);
+            var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(summaryPath, json);
+            logger.Info($"Saved deployment summary to {summaryPath}");
+            return summaryPath;
+        }
+        catch (Exception ex)
+        {
+            logger.Warn($"Unable to write summary file: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static string ResolveSummaryPath(string? userPath)
+    {
+        if (!string.IsNullOrWhiteSpace(userPath))
+        {
+            var targetDir = Path.GetDirectoryName(userPath);
+            if (string.IsNullOrWhiteSpace(targetDir))
+            {
+                targetDir = Directory.GetCurrentDirectory();
+            }
+
+            Directory.CreateDirectory(targetDir);
+            return Path.GetFullPath(Path.Combine(targetDir, Path.GetFileName(userPath)));
+        }
+
+        var defaultDir = Path.Combine(AppContext.BaseDirectory, "logs");
+        Directory.CreateDirectory(defaultDir);
+        return Path.Combine(defaultDir, $"NinnyLauncher-summary-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+    }
 }

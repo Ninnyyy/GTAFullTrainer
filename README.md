@@ -82,10 +82,16 @@ Everything is modular and built to be extended.
 1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
 2. Build this project in **Release** mode with `.NET Framework 4.8`.
 3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode**, intentionally skip FiveM/online installs, and will note that BattlEye isn’t used for Story Mode):
-   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, walks up the repo to find `NinnyTrainer.csproj`, and prints a premium, colorized status/summary):
+   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, walks up the repo to find `NinnyTrainer.csproj`, saves a timestamped log + JSON summary, and can optionally auto-launch Story Mode):
      ```powershell
      dotnet publish tools/Launcher/TrainerLauncher.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-     # run after publishing; use --verbose for detailed detection, --dry-run to simulate, --game-path to override
+     # run after publishing; useful flags:
+     #   --launch-game       start GTA5.exe after copying
+     #   --log-file          override where the launcher writes its premium log file
+     #   --summary-file      override where the launcher writes its JSON deployment summary
+     #   --verbose           show detailed detection/copy output
+     #   --dry-run           simulate without copying
+     #   --game-path         override the Story Mode install folder
      .\tools\Launcher\bin\Release\net8.0\win-x64\publish\NinnyTrainer.Launcher.exe
      ```
    - **PowerShell script** (same detection logic, handy for quick terminal use):
@@ -94,6 +100,7 @@ Everything is modular and built to be extended.
      # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C\Program Files\Rockstar Games\Grand Theft Auto V"
      ```
    Both helpers place `NinnyTrainer.dll` under `scripts/NinnyTrainer` and also copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`.
+   The launcher saves a colorized console log and JSON summary in `tools/Launcher/bin/<config>/<rid>/publish/logs` by default (override with `--log-file` / `--summary-file`).
 
 4. Launch GTA V (story mode only). The trainer will open its menu automatically on first load, and also logs menu events to `NinnyTrainer.log` alongside your game scripts folder.
 
