@@ -1,15 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace GTAFullTrainer.Core
 {
     public static class ConfigManager
     {
         private static readonly string configPath =
-            AppDomain.CurrentDomain.BaseDirectory + "TrainerConfig.ini";
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TrainerConfig.ini");
 
-        private static Dictionary<string, string> settings =
+        private static readonly Dictionary<string, string> settings =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public static void Load()
@@ -41,9 +42,10 @@ namespace GTAFullTrainer.Core
 
         public static string Get(string key, string defaultValue = "")
         {
-            if (settings.ContainsKey(key))
-                return settings[key];
+            if (settings.TryGetValue(key, out string value))
+                return value;
 
+            settings[key] = defaultValue;
             return defaultValue;
         }
 
@@ -54,15 +56,20 @@ namespace GTAFullTrainer.Core
 
         public static void Save()
         {
-            List<string> lines = new List<string>
+            List<string> lines = new List<string> { "[Trainer]" };
+
+            foreach (var pair in settings.OrderBy(p => p.Key, StringComparer.OrdinalIgnoreCase))
             {
-"[Trainer]"
-};
+                lines.Add($"{pair.Key}={pair.Value}");
+            }
 
-foreach (var pair in settings)
-{
-lines.Add($"{pair.Key}={pair.Value}");
-}
+            string? directory = Path.GetDirectoryName(configPath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-File.WriteAllLines(configPath, lines.ToArray());
+            File.WriteAllLines(configPath, lines.ToArray());
+        }
+    }
 }
