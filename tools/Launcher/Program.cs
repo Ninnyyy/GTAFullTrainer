@@ -652,6 +652,20 @@ internal static class InstallHealthCheck
             }
         }
 
+        if (!HasNet48())
+        {
+            const string warning = ".NET Framework 4.8 not detected. Install the latest .NET Framework runtime so ScriptHookVDotNet can load the trainer.";
+            warnings.Add(warning);
+            logger.Warn(warning);
+        }
+
+        if (!HasVcRedist())
+        {
+            const string warning = "Visual C++ 2015-2022 x64 runtime not detected. Install the latest VC++ redistributable so ScriptHookV dependencies can load.";
+            warnings.Add(warning);
+            logger.Warn(warning);
+        }
+
         var scriptsFolder = Path.Combine(storyModePath, "scripts");
         if (!Directory.Exists(scriptsFolder))
         {
@@ -677,6 +691,49 @@ internal static class InstallHealthCheck
             File.WriteAllText(testFile, "ok");
             File.Delete(testFile);
             return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool HasNet48()
+    {
+        try
+        {
+            const string keyPath = @"SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full";
+            using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(keyPath);
+            var release = key?.GetValue("Release") as int?;
+            return release is not null && release >= 528040; // .NET Framework 4.8 or newer
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool HasVcRedist()
+    {
+        try
+        {
+            var keyPaths = new[]
+            {
+                @"SOFTWARE\\WOW6432Node\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\x64",
+                @"SOFTWARE\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\x64"
+            };
+
+            foreach (var path in keyPaths)
+            {
+                using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(path);
+                var installed = key?.GetValue("Installed") as int?;
+                if (installed == 1)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
         catch
         {

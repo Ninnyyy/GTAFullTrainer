@@ -5,6 +5,8 @@ This guide walks you through setting up Ninny Trainer for **GTA V Story Mode** u
 ## Prerequisites
 - Windows PC with **GTA V Story Mode** installed (Steam/Rockstar/Epic, legacy or enhanced).
 - .NET 8 SDK (for building) or the published launcher executable.
+- **.NET Framework 4.8 runtime** so ScriptHookVDotNet can load the trainer (the launcher will warn if it is missing).
+- **Visual C++ 2015-2022 x64 runtime** to satisfy ScriptHookV dependencies (the launcher will warn if it is missing).
 - ScriptHookV and ScriptHookVDotNet files ready. If you place them under a local `Dependencies/` folder, the launcher will copy
   them into your Story Mode install automatically.
 - A terminal/PowerShell window with permission to write to your GTA V directory.
@@ -45,6 +47,7 @@ If you already have a built trainer DLL, you can copy it directly without rebuil
 
 ## Troubleshooting
 - If the launcher cannot find the game, supply `--game-path "C:\Games\Grand Theft Auto V"`.
-- Ensure ScriptHookV and ScriptHookVDotNet are present; the game must be launched in single-player mode.
+- Ensure ScriptHookV and ScriptHookVDotNet are present; the game must be launched in single-player mode. The launcher will note
+  if .NET Framework 4.8 or Visual C++ runtimes are missing.
 - If you see build errors, install the .NET 8 SDK and rerun the publish script.
 - For full validation, run `./tools/ValidateAll.ps1` (Windows) or `./tools/ValidateAll.sh` (macOS/Linux with wine/proton build tools installed).
