@@ -11,6 +11,12 @@ This guide walks you through setting up Ninny Trainer for **GTA V Story Mode** u
   them into your Story Mode install automatically.
 - A terminal/PowerShell window with permission to write to your GTA V directory.
 
+### Recommended installs
+- **PowerShell 7** for consistent script behavior (Windows PowerShell works, but PS 7+ matches the repo scripts best).
+- **DirectX End-User Runtimes (June 2010)** to ensure any legacy DirectX components other mods rely on are present.
+- **7-Zip or similar archiver** so you can extract published release bundles quickly.
+- **Git** if you plan to pull updates or contribute code.
+
 ## Quick install with the launcher (recommended)
 1. Build the trainer and launcher bundle:
    ```powershell

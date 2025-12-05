@@ -100,6 +100,12 @@ Everything is modular and built to be extended.
 
 ## ▶️ How to Install (Player)
 
+Before running the launcher or deploy script, make sure the core runtimes are present (full details in the [Installation Guide](INSTALL.md)):
+- .NET 8 SDK (to build or publish the launcher) or the prebuilt launcher EXE.
+- .NET Framework 4.8 and Visual C++ 2015-2022 x64 runtimes for ScriptHookVDotNet/ScriptHookV.
+- ScriptHookV + ScriptHookVDotNet files (drop them into `Dependencies/` to deploy automatically).
+- PowerShell 7 (recommended), Git, and the DirectX End-User Runtimes (June 2010) if you want the smoothest script and mod experience.
+
 1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
 2. Build this project in **Release** mode with `.NET Framework 4.8`.
 3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode**, intentionally skip FiveM/online installs, and will note that BattlEye isn’t used for Story Mode):
