@@ -104,7 +104,8 @@ Before running the launcher or deploy script, make sure the core runtimes are pr
 - .NET 8 SDK (to build or publish the launcher) or the prebuilt launcher EXE.
 - .NET Framework 4.8 and Visual C++ 2015-2022 x64 runtimes for ScriptHookVDotNet/ScriptHookV.
 - ScriptHookV + ScriptHookVDotNet files (drop them into `Dependencies/` to deploy automatically).
-- PowerShell 7 (recommended), Git, and the DirectX End-User Runtimes (June 2010) if you want the smoothest script and mod experience.
+- PowerShell 7 (recommended), Git, the DirectX End-User Runtimes (June 2010), and current GPU drivers for the smoothest script and mod experience.
+- Optional conveniences: .NET 8 Desktop Runtime if you only run the launcher (no SDK install), 7-Zip for extracting releases, and a quick editor like Notepad++ or VS Code for config tweaks.
 
 1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
 2. Build this project in **Release** mode with `.NET Framework 4.8`.

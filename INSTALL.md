@@ -16,6 +16,10 @@ This guide walks you through setting up Ninny Trainer for **GTA V Story Mode** u
 - **DirectX End-User Runtimes (June 2010)** to ensure any legacy DirectX components other mods rely on are present.
 - **7-Zip or similar archiver** so you can extract published release bundles quickly.
 - **Git** if you plan to pull updates or contribute code.
+- **Latest GPU drivers** (NVIDIA/AMD/Intel) to avoid overlay/renderer glitches when new menu effects are enabled.
+- **Windows Update + Visual C++ runtime refresh** so the 2015-2022 redistributable stays current if you reinstall or repair it.
+- **.NET 8 Desktop Runtime** if you want to run the launcher without installing the full SDK on a play-only machine.
+- **Notepad++ or VS Code** for quick edits to `TrainerConfig.ini` or plugin source files.
 
 ## Quick install with the launcher (recommended)
 1. Build the trainer and launcher bundle:
