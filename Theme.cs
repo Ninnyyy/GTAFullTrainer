@@ -5,18 +5,20 @@ namespace GTAFullTrainer.Core
 {
     public static class Theme
     {
-        // Primary theme colors
-        public static Color Purple = Color.FromArgb(255, 155, 77, 255);   // Neon purple
-        public static Color Grey = Color.FromArgb(255, 60, 60, 60);       // Steel grey
-        public static Color DarkGrey = Color.FromArgb(255, 25, 25, 25);   // Dark grey
-        public static Color Black = Color.FromArgb(200, 10, 10, 10);      // Soft black background
+        // Primary theme colors (dark purple, grey, black)
+        public static Color Purple = Color.FromArgb(255, 150, 90, 255);   // Rich neon purple
+        public static Color Grey = Color.FromArgb(255, 58, 58, 66);        // Graphite grey
+        public static Color DarkGrey = Color.FromArgb(255, 22, 22, 28);    // Deep slate
+        public static Color Black = Color.FromArgb(210, 8, 8, 10);         // Soft black background
 
-        // Glowing purple for accents
-        public static Color PurpleGlow = Color.FromArgb(255, 180, 100, 255);
+        // Accent glows and gradients
+        public static Color PurpleGlow = Color.FromArgb(255, 195, 140, 255);
+        public static Color SoftGradientTop = Color.FromArgb(120, 70, 40, 80);
+        public static Color SoftGradientBottom = Color.FromArgb(120, 15, 10, 20);
 
         // Text colors
-        public static Color TextBright = Color.FromArgb(255, 255, 255, 255);
-        public static Color TextDim = Color.FromArgb(200, 200, 200, 200);
+        public static Color TextBright = Color.FromArgb(255, 245, 245, 255);
+        public static Color TextDim = Color.FromArgb(200, 200, 200, 220);
 
         // UI scale (changeable in config/settings)
         public static float UIScale = 1.0f;

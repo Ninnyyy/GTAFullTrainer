@@ -4,6 +4,8 @@ A fully-featured, extensible, animated **GTA V trainer** designed for clean visu
 Built on a custom **Ninny Purple UI Framework**, smooth animations, plugin support, and dozens of built-in systems.
 
 For forward-looking enhancements and ambitious experiments, see [Advanced Feature Ideas](ADVANCED_IDEAS.md).
+For menu-specific polish and UX concepts, visit [Menu Feature Ideas](MENU_FEATURE_IDEAS.md).
+For a large collection of Story Mode-safe premium concepts (now 1,000 strong), browse the [Premium Feature Catalog](PREMIUM_FEATURE_CATALOG.md).
 
 > ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.
 > Using mods in GTA Online will result in a ban.
@@ -14,7 +16,7 @@ For forward-looking enhancements and ambitious experiments, see [Advanced Featur
 ## ✨ Features
 
 ### 💜 Modern Animated UI
-- Purple neon theme
+- Purple neon theme with dark purple/grey/black gradients
 - Smooth slide-in transitions
 - Blur effect behind menu
 - Animated category switching
@@ -43,6 +45,24 @@ For forward-looking enhancements and ambitious experiments, see [Advanced Featur
 - Damage multipliers
 - Attachment toggles
 - Preset save/load system
+
+### 🛡 Premium Cheats
+- Cloak mode that hides you from NPCs and cops
+- Adaptive armor that refreshes health and armor constantly
+- Auto vehicle repair with tire protection and strong chassis
+- Kinetic shield to push nearby threats away
+- Infinite ammo and no-reload for your current weapon
+- Hyper Focus aiming slow-mo that restores time when you stop aiming
+- Vehicle booster for sustained forward thrust
+- Heat nullifier to instantly clear wanted level while enabled
+- Gravity bubble that lifts nearby NPCs and vehicles off the ground
+- Feather fall to soften landings and prevent ragdolls while airborne
+- Impact guard that grants full bullet/explosion/fire/electric proofs
+- Auto cleanse to extinguish flames and wipe off blood or wetness on the fly
+- Stasis field that slows nearby NPCs and vehicles in a controllable bubble
+- Manual shockwave pulse for crowd control
+- EMP burst button to stall nearby vehicles without explosions
+- Blink dash button for short-range teleports in your facing direction
 
 ### 🧱 World Builder / Map Editor
 - Select entities
@@ -110,6 +130,8 @@ Everything is modular and built to be extended.
 4. Launch GTA V (story mode only). The trainer will open its menu automatically on first load, and also logs menu events to `NinnyTrainer.log` alongside your game scripts folder.
 
 Press **INSERT** to toggle the trainer (or set your own hotkey in the trainer Settings page).
+
+Inside the Settings page you can now toggle auto-open, enable/disable the trainer log file, and dial in menu presentation with animation toggles, speed, and UI scale controls so the experience feels right on your display.
 
 ---
 
