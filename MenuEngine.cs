@@ -4,6 +4,7 @@ using GTA.UI;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using NinnyTrainer.Effects;
 
 namespace GTAFullTrainer.Core
 {
@@ -15,7 +16,10 @@ namespace GTAFullTrainer.Core
         private static int selectedIndex = 0;
 
         private static float openAnim = 0f;
-        private static float animSpeed = 0.08f;
+        private static float animSpeed = 0.12f;
+        private static bool animationsEnabled = true;
+        private static float uiScale = 1.0f;
+        private static float categoryBarY = 0f;
 
         private static Dictionary<string, Action> pages = new Dictionary<string, Action>();
 
@@ -52,6 +56,25 @@ namespace GTAFullTrainer.Core
             pages["Chaos"] = () => Pages.ChaosPage.Draw(selectedIndex);
             pages["Developer"] = () => Pages.DevPage.Draw(selectedIndex);
             pages["Settings"] = () => Pages.SettingsPage.Draw(selectedIndex);
+        }
+
+        public static void SetAnimationsEnabled(bool enabled)
+        {
+            animationsEnabled = enabled;
+            if (!animationsEnabled)
+            {
+                openAnim = 1f;
+            }
+        }
+
+        public static void SetAnimationSpeed(float speed)
+        {
+            animSpeed = Math.Max(0.0f, Math.Min(speed, 0.5f));
+        }
+
+        public static void SetUiScale(float scale)
+        {
+            uiScale = Math.Max(0.5f, Math.Min(scale, 1.8f));
         }
 
         public static void OpenMenu()
@@ -97,36 +120,37 @@ namespace GTAFullTrainer.Core
 
         private static void AnimateOpenClose()
         {
-            if (IsOpen)
+            float target = IsOpen ? 1f : 0f;
+
+            if (!animationsEnabled)
             {
-                if (openAnim < 1f)
-                    openAnim += animSpeed;
-                if (openAnim > 1f)
-                    openAnim = 1f;
+                openAnim = target;
+                return;
             }
-            else
-            {
-                if (openAnim > 0f)
-                    openAnim -= animSpeed;
-                if (openAnim < 0f)
-                    openAnim = 0f;
-            }
+
+            openAnim = AnimationEngine.Damp(openAnim, target, animSpeed);
         }
 
         private static void DrawMenu()
         {
-            float width = 0.32f * openAnim;
-            float height = 0.52f;
-            float x = 0.03f;
-            float y = 0.20f;
+            float eased = AnimationEngine.EaseOut(openAnim);
 
-            // Background panel
-            new UIResRectangle(new Point((int)(x * 1920), (int)(y * 1080)),
-                new Size((int)(width * 1920), (int)(height * 1080)),
-                Color.FromArgb(180, 15, 15, 15))
-                .Draw();
+            float width = 0.34f * eased * uiScale;
+            float height = 0.54f * uiScale;
+            float x = 0.03f + (0.01f * (1f - eased));
+            float y = 0.18f + (0.02f * (1f - eased));
 
-            if (openAnim <= 0.01f) return;
+            // Backdrop and gradient glow
+            new UIResRectangle(new Point(0, 0), new Size(1920, 1080), Color.FromArgb((int)(80 * eased), Theme.Black.R, Theme.Black.G, Theme.Black.B)).Draw();
+
+            if (eased <= 0.01f) return;
+
+            var baseRect = new Rectangle((int)(x * 1920), (int)(y * 1080), (int)(width * 1920), (int)(height * 1080));
+            new UIResRectangle(baseRect.Location, baseRect.Size, Color.FromArgb(200, Theme.DarkGrey.R, Theme.DarkGrey.G, Theme.DarkGrey.B)).Draw();
+
+            // Soft gradient overlay
+            new UIResRectangle(baseRect.Location, baseRect.Size, Theme.SoftGradientTop).Draw();
+            new UIResRectangle(baseRect.Location, baseRect.Size, Theme.SoftGradientBottom).Draw();
 
             DrawCategories(x, y, width, height);
             DrawCurrentPage(x, y, width, height);
@@ -135,6 +159,7 @@ namespace GTAFullTrainer.Core
         private static void DrawCategories(float x, float y, float width, float height)
         {
             float categoryWidth = width * 0.35f;
+            float indicatorHeight = 0.035f;
 
             for (int i = 0; i < categories.Count; i++)
             {
@@ -142,8 +167,8 @@ namespace GTAFullTrainer.Core
                 float entryY = y + 0.02f + (entryHeight * i);
 
                 Color color = (i == selectedCategory)
-                    ? Color.FromArgb(255, 155, 77, 255)
-                    : Color.FromArgb(200, 90, 90, 90);
+                    ? Theme.Purple
+                    : Color.FromArgb(200, Theme.TextDim.R, Theme.TextDim.G, Theme.TextDim.B);
 
                 new UIResText(categories[i],
                     new Point((int)((x + 0.01f) * 1920), (int)(entryY * 1080)),
@@ -152,14 +177,17 @@ namespace GTAFullTrainer.Core
                     .Draw();
 
                 if (i == selectedCategory)
-                {
-                    new UIResRectangle(
-                        new Point((int)((x + categoryWidth - 0.005f) * 1920), (int)(entryY * 1080)),
-                        new Size((int)(0.004f * 1920), (int)(0.035f * 1080)),
-                        Color.FromArgb(255, 155, 77, 255))
-                        .Draw();
-                }
+                    categoryBarY = AnimationEngine.Damp(categoryBarY, entryY, 0.22f);
             }
+
+            // Animated category bar
+            float pulse = AnimationEngine.Bounce(Game.GameTime / 1800f);
+            int pulseBlue = Math.Min(255, Theme.PurpleGlow.B + (int)(20 * pulse));
+            new UIResRectangle(
+                new Point((int)((x + categoryWidth - 0.005f) * 1920), (int)(categoryBarY * 1080)),
+                new Size((int)(0.004f * 1920), (int)(indicatorHeight * 1080)),
+                Color.FromArgb(220, Theme.PurpleGlow.R, Theme.PurpleGlow.G, pulseBlue))
+                .Draw();
         }
 
         private static void DrawCurrentPage(float x, float y, float width, float height)
