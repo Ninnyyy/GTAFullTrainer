@@ -1,18 +1,23 @@
 # 💜 Ninny Trainer — A Modern GTA V Single-Player Framework
 
-A fully-featured, extensible, animated **GTA V trainer** designed for clean visuals, powerful tools, and a premium user experience.  
+A fully-featured, extensible, animated **GTA V trainer** designed for clean visuals, powerful tools, and a premium user experience.
 Built on a custom **Ninny Purple UI Framework**, smooth animations, plugin support, and dozens of built-in systems.
 
-> ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.  
-Using mods in GTA Online will result in a ban.  
-This project does *not* support, encourage, or condone online cheating.
+For forward-looking enhancements and ambitious experiments, see [Advanced Feature Ideas](ADVANCED_IDEAS.md).
+For menu-specific polish and UX concepts, visit [Menu Feature Ideas](MENU_FEATURE_IDEAS.md).
+For a large collection of Story Mode-safe premium concepts (now 1,000 strong), browse the [Premium Feature Catalog](PREMIUM_FEATURE_CATALOG.md).
+For setup steps, build guidance, and Story Mode deployment options, read the [Installation Guide](INSTALL.md).
+
+> ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.
+> Using mods in GTA Online will result in a ban.
+> This project does *not* support, encourage, or condone online cheating.
 
 ---
 
 ## ✨ Features
 
 ### 💜 Modern Animated UI
-- Purple neon theme
+- Purple neon theme with dark purple/grey/black gradients
 - Smooth slide-in transitions
 - Blur effect behind menu
 - Animated category switching
@@ -21,26 +26,44 @@ This project does *not* support, encourage, or condone online cheating.
 - Sound effects (navigate, select, open, close)
 
 ### ⚔ Player Tools
-- Godmode  
-- Heal player  
-- Never wanted  
-- Walkstyle selector  
-- Speed modifiers  
+- Godmode
+- Heal player
+- Never wanted
+- Walkstyle selector
+- Speed modifiers
 
 ### 🚗 Vehicle Tools
-- Spawn vehicles  
-- Repair / flip  
-- Invincibility  
-- Torque & brake tuning  
+- Spawn vehicles
+- Repair / flip
+- Invincibility
+- Torque & brake tuning
 
 ### 🔫 Weapon Modder
-- Laser bullets  
-- Freeze bullets  
-- Fire rounds  
-- Shockwave blast  
-- Damage multipliers  
-- Attachment toggles  
-- Preset save/load system  
+- Laser bullets
+- Freeze bullets
+- Fire rounds
+- Shockwave blast
+- Damage multipliers
+- Attachment toggles
+- Preset save/load system
+
+### 🛡 Premium Cheats
+- Cloak mode that hides you from NPCs and cops
+- Adaptive armor that refreshes health and armor constantly
+- Auto vehicle repair with tire protection and strong chassis
+- Kinetic shield to push nearby threats away
+- Infinite ammo and no-reload for your current weapon
+- Hyper Focus aiming slow-mo that restores time when you stop aiming
+- Vehicle booster for sustained forward thrust
+- Heat nullifier to instantly clear wanted level while enabled
+- Gravity bubble that lifts nearby NPCs and vehicles off the ground
+- Feather fall to soften landings and prevent ragdolls while airborne
+- Impact guard that grants full bullet/explosion/fire/electric proofs
+- Auto cleanse to extinguish flames and wipe off blood or wetness on the fly
+- Stasis field that slows nearby NPCs and vehicles in a controllable bubble
+- Manual shockwave pulse for crowd control
+- EMP burst button to stall nearby vehicles without explosions
+- Blink dash button for short-range teleports in your facing direction
 
 ### 🧱 World Builder / Map Editor
 - Select entities
@@ -54,12 +77,12 @@ This project does *not* support, encourage, or condone online cheating.
 - Clear world
 
 ### 🧭 HUD Overlays
-- Speedometer  
-- RPM gauge  
-- G-force meter  
-- Compass  
-- Damage indicator  
-- Health / armor bars  
+- Speedometer
+- RPM gauge
+- G-force meter
+- Compass
+- Damage indicator
+- Health / armor bars
 
 ### 🧩 Add-On Plugin API
 - Add pages dynamically
@@ -71,26 +94,74 @@ This project does *not* support, encourage, or condone online cheating.
 
 ## 📁 Project Structure
 
-
 Everything is modular and built to be extended.
 
 ---
 
 ## ▶️ How to Install (Player)
 
-1. Install **ScriptHookV**  
-2. Install **ScriptHookVDotNet**  
-3. Build this project (`Release` mode)
-4. Copy the **NinnyTrainer.dll** into:
-5. Launch GTA V (story mode)
+Before running the launcher or deploy script, make sure the core runtimes are present (full details in the [Installation Guide](INSTALL.md)):
+- .NET 8 SDK (to build or publish the launcher) or the prebuilt launcher EXE.
+- .NET Framework 4.8 and Visual C++ 2015-2022 x64 runtimes for ScriptHookVDotNet/ScriptHookV.
+- ScriptHookV + ScriptHookVDotNet files (drop them into `Dependencies/` to deploy automatically).
+- PowerShell 7 (recommended), Git, and the DirectX End-User Runtimes (June 2010) if you want the smoothest script and mod experience.
 
-Press **INSERT** to open the trainer.
+1. Install **ScriptHookV** (Alexander Blade) and **ScriptHookVDotNet** (build 3.x recommended; 2.x is also bundled in the project references).
+2. Build this project in **Release** mode with `.NET Framework 4.8`.
+3. Choose your preferred deployment helper to copy everything into your GTA V folder (both only target **Story Mode**, intentionally skip FiveM/online installs, and will note that BattlEye isn’t used for Story Mode):
+   - **One-click EXE launcher** (auto-finds Steam/Rockstar/Epic installs, legacy/enhanced paths, walks up the repo to find `NinnyTrainer.csproj`, saves a timestamped log + JSON summary, and can optionally auto-launch Story Mode):
+     ```powershell
+     dotnet publish tools/Launcher/TrainerLauncher.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+     # run after publishing; useful flags:
+     #   --launch-game       start GTA5.exe after copying
+     #   --log-file          override where the launcher writes its premium log file
+     #   --summary-file      override where the launcher writes its JSON deployment summary
+     #   --verbose           show detailed detection/copy output
+     #   --dry-run           simulate without copying
+     #   --game-path         override the Story Mode install folder
+     .\tools\Launcher\bin\Release\net8.0\win-x64\publish\NinnyTrainer.Launcher.exe
+     ```
+     To ship a GitHub release asset, run the helper to publish and stage a bundled payload next to the EXE (the launcher now auto-detects a `payload/bin/<config>` folder beside itself, so players don’t need source files):
+     ```powershell
+     pwsh -File tools/Launcher/PublishLauncher.ps1 -Configuration Release -Runtime win-x64
+     # Upload dist/win-x64/NinnyTrainer.Launcher.exe and the dist/win-x64/payload folder to your release assets.
+     ```
+   - **PowerShell script** (same detection logic, handy for quick terminal use):
+   ```powershell
+   pwsh -File tools/Deploy.ps1
+   # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C\Program Files\Rockstar Games\Grand Theft Auto V"
+   ```
+   Both helpers place `NinnyTrainer.dll` under `scripts/NinnyTrainer`, copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`, and will also drop anything under a local `Dependencies/` folder (e.g., ScriptHookV/ScriptHookVDotNet files) directly into your GTA V Story Mode directory.
+   The launcher saves a colorized console log and JSON summary in `tools/Launcher/bin/<config>/<rid>/publish/logs` by default (override with `--log-file` / `--summary-file`).
+
+4. Launch GTA V (story mode only). The trainer will open its menu automatically on first load, and also logs menu events to `NinnyTrainer.log` alongside your game scripts folder.
+
+Press **INSERT** to toggle the trainer (or set your own hotkey in the trainer Settings page).
+
+Inside the Settings page you can now toggle auto-open, enable/disable the trainer log file, and dial in menu presentation with animation toggles, speed, and UI scale controls so the experience feels right on your display.
 
 ---
 
 ## 🧩 Create Your Own Add-On Plugin
 
-Drop a `.dll` into:
+Drop a compiled `.dll` into: `Grand Theft Auto V/scripts/NinnyTrainer/Plugins`.
+
+**Quick-start example** (see `Examples/SamplePlugin.cs` for a full file):
+```csharp
+using NinnyTrainer.Plugins;
+
+public class HelloWorldPlugin : ITrainerPlugin
+{
+    public void Initialize()
+    {
+        GTA.UI.Notify("~p~Hello from my plugin!");
+    }
+}
+```
+
+Build the plugin as a **Class Library targeting .NET Framework 4.8**, copy the output `.dll` into the `Plugins` folder, and restart/reload the trainer.
+
+---
 
 🛡 License
 
