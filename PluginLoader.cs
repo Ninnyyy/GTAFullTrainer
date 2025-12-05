@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using GTA;
-using NinnyTrainer.API;
 
 namespace NinnyTrainer.Plugins
 {

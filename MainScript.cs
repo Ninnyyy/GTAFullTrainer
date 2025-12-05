@@ -93,6 +93,26 @@ public class MainScript : Script
             new UISlider("Strength", 1f, 20f, 1f, v => SuperpowerPage.SetStrength(v))
         });
 
+        // PREMIUM CHEATS
+        UICore.RegisterCategory("Premium Cheats", new List<UIControl> {
+            new UIToggle("Cloak Mode", false, s => PremiumCheatsPage.ToggleCloak(s)),
+            new UIToggle("Adaptive Armor", false, s => PremiumCheatsPage.ToggleAdaptiveArmor(s)),
+            new UIToggle("Auto Repair Ride", false, s => PremiumCheatsPage.ToggleAutoRepairRide(s)),
+            new UIToggle("Kinetic Shield", false, s => PremiumCheatsPage.ToggleKineticShield(s)),
+            new UIToggle("Infinite Ammo", false, s => PremiumCheatsPage.ToggleInfiniteAmmo(s)),
+            new UIToggle("Hyper Focus (Aim Slo-Mo)", false, s => PremiumCheatsPage.ToggleHyperFocus(s)),
+            new UIToggle("Vehicle Booster", false, s => PremiumCheatsPage.ToggleVehicleBooster(s)),
+            new UIToggle("Heat Nullifier", false, s => PremiumCheatsPage.ToggleHeatNullifier(s)),
+            new UIToggle("Gravity Bubble", false, s => PremiumCheatsPage.ToggleGravityBubble(s)),
+            new UIToggle("Feather Fall", false, s => PremiumCheatsPage.ToggleFeatherFall(s)),
+            new UIToggle("Impact Guard (Full Proofs)", false, s => PremiumCheatsPage.ToggleImpactGuard(s)),
+            new UIToggle("Auto Cleanse (Fire/Blood)", false, s => PremiumCheatsPage.ToggleAutoCleanse(s)),
+            new UIToggle("Stasis Field (Slow Nearby)", false, s => PremiumCheatsPage.ToggleStasisField(s)),
+            new UIButton("Shockwave Pulse", () => PremiumCheatsPage.TriggerShockwave()),
+            new UIButton("EMP Burst", () => PremiumCheatsPage.TriggerEmpBurst()),
+            new UIButton("Blink Dash", () => PremiumCheatsPage.TriggerBlinkDash())
+        });
+
         // DEVTOOLS
         UICore.RegisterCategory("Dev Tools", new List<UIControl> {
             new UIToggle("Show Coordinates", false, s => DevPage.ToggleCoords(s)),
@@ -115,6 +135,7 @@ public class MainScript : Script
         WeaponModderPage.OnTick();
         WorldBuilderPage.OnTick();
         HUDWidgetsPage.OnTick();
+        PremiumCheatsPage.OnTick();
     }
 
     private void OnKeyUp(object sender, KeyEventArgs e)
