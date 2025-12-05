@@ -10,10 +10,14 @@ dotnet build
 dotnet test
 ```
 
-For a quick end-to-end validation of the launcher and trainer (including dependency checks for ScriptHookVDotNet), run the helper script:
+For a quick end-to-end validation of the launcher and trainer (including dependency checks for ScriptHookVDotNet), run one of the helper scripts:
 
-```pwsh
+```bash
+# Bash / Linux / macOS
+./tools/ValidateAll.sh -c Release
+
+# PowerShell
 pwsh ./tools/ValidateAll.ps1 -Configuration Release
 ```
 
-If you only want to validate the launcher (for example, on a machine without ScriptHookVDotNet), include `-SkipTrainer`.
+If you only want to validate the launcher (for example, on a machine without ScriptHookVDotNet), include `--skip-trainer` or `-SkipTrainer` respectively.
