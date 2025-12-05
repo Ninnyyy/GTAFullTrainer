@@ -43,5 +43,11 @@ if (Test-Path (Join-Path $root "Plugins")) {
     Copy-Item (Join-Path $root "Plugins/*.dll") $pluginsDest -Force -ErrorAction SilentlyContinue
 }
 
+$dependencies = Join-Path $root "Dependencies"
+if (Test-Path $dependencies) {
+    Write-Host "Including optional Dependencies folder..." -ForegroundColor Cyan
+    Copy-Item $dependencies (Join-Path $dist "payload") -Recurse -Force
+}
+
 Write-Host "Bundle ready in $dist" -ForegroundColor Green
 Write-Host "Upload NinnyTrainer.Launcher.exe with the payload folder to your GitHub release assets." -ForegroundColor Yellow

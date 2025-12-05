@@ -6,6 +6,7 @@ Built on a custom **Ninny Purple UI Framework**, smooth animations, plugin suppo
 For forward-looking enhancements and ambitious experiments, see [Advanced Feature Ideas](ADVANCED_IDEAS.md).
 For menu-specific polish and UX concepts, visit [Menu Feature Ideas](MENU_FEATURE_IDEAS.md).
 For a large collection of Story Mode-safe premium concepts (now 1,000 strong), browse the [Premium Feature Catalog](PREMIUM_FEATURE_CATALOG.md).
+For setup steps, build guidance, and Story Mode deployment options, read the [Installation Guide](INSTALL.md).
 
 > ⚠️ **IMPORTANT:** This trainer is strictly for **single-player** use.
 > Using mods in GTA Online will result in a ban.
@@ -120,11 +121,11 @@ Everything is modular and built to be extended.
      # Upload dist/win-x64/NinnyTrainer.Launcher.exe and the dist/win-x64/payload folder to your release assets.
      ```
    - **PowerShell script** (same detection logic, handy for quick terminal use):
-     ```powershell
-     pwsh -File tools/Deploy.ps1
-     # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C\Program Files\Rockstar Games\Grand Theft Auto V"
-     ```
-   Both helpers place `NinnyTrainer.dll` under `scripts/NinnyTrainer` and also copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`.
+   ```powershell
+   pwsh -File tools/Deploy.ps1
+   # or explicitly: pwsh -File tools/Deploy.ps1 -GamePath "C\Program Files\Rockstar Games\Grand Theft Auto V"
+   ```
+   Both helpers place `NinnyTrainer.dll` under `scripts/NinnyTrainer`, copy any `.dll` files you have in the repository `Plugins/` folder into `scripts/NinnyTrainer/Plugins`, and will also drop anything under a local `Dependencies/` folder (e.g., ScriptHookV/ScriptHookVDotNet files) directly into your GTA V Story Mode directory.
    The launcher saves a colorized console log and JSON summary in `tools/Launcher/bin/<config>/<rid>/publish/logs` by default (override with `--log-file` / `--summary-file`).
 
 4. Launch GTA V (story mode only). The trainer will open its menu automatically on first load, and also logs menu events to `NinnyTrainer.log` alongside your game scripts folder.

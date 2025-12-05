@@ -260,8 +260,9 @@ internal sealed class DeploymentCopier
         var trainerDllsCopied = CopyDlls(_buildOutput, trainerFolder, "trainer dlls");
         var pluginDllsCopied = CopyPlugins(pluginsFolder);
         var configsCopied = CopyConfigs(trainerFolder);
+        var dependenciesCopied = CopyDependencies(_storyModePath);
 
-        return new DeploymentResult(trainerDllsCopied, pluginDllsCopied, configsCopied);
+        return new DeploymentResult(trainerDllsCopied, pluginDllsCopied, configsCopied, dependenciesCopied);
     }
 
     private int CopyDlls(string sourceFolder, string destinationFolder, string label)
@@ -316,6 +317,56 @@ internal sealed class DeploymentCopier
         return copied;
     }
 
+    private int CopyDependencies(string storyModeRoot)
+    {
+        var candidateRoots = new[]
+        {
+            Path.Combine(_projectRoot, "Dependencies"),
+            Path.Combine(_buildOutput, "Dependencies"),
+            Path.Combine(AppContext.BaseDirectory, "payload", "Dependencies"),
+            Path.Combine(AppContext.BaseDirectory, "Dependencies")
+        };
+
+        var existing = candidateRoots.Where(Directory.Exists).ToArray();
+        if (existing.Length == 0)
+        {
+            _logger.Info("No dependency bundle found; skipping optional extra files (ScriptHookV/ScriptHookVDotNet, etc.).");
+            return 0;
+        }
+
+        var copied = 0;
+        var seenDestinations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var root in existing)
+        {
+            var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                var relative = Path.GetRelativePath(root, file);
+                var destination = Path.GetFullPath(Path.Combine(storyModeRoot, relative));
+
+                if (!destination.StartsWith(Path.GetFullPath(storyModeRoot), StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.Warn($"Skipping dependency outside Story Mode path: {file}");
+                    continue;
+                }
+
+                if (seenDestinations.Add(destination))
+                {
+                    LogCopy(file, destination);
+                    if (!_dryRun)
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                        File.Copy(file, destination, overwrite: true);
+                    }
+                    copied++;
+                }
+            }
+        }
+
+        return copied;
+    }
+
     private void LogCopy(string source, string destination)
     {
         _logger.Info($"Copying {Path.GetFileName(source)} -> {destination}");
@@ -326,7 +377,7 @@ internal sealed class DeploymentCopier
     }
 }
 
-internal sealed record DeploymentResult(int TrainerDllsCopied, int PluginDllsCopied, int ConfigsCopied);
+internal sealed record DeploymentResult(int TrainerDllsCopied, int PluginDllsCopied, int ConfigsCopied, int DependenciesCopied);
 
 internal static class PathFinder
 {
@@ -795,6 +846,7 @@ internal static class LauncherPresentation
         logger.Info($"   ✓ Trainer DLLs: {result.CopyResult.TrainerDllsCopied}");
         logger.Info($"   ✓ Plugins:     {result.CopyResult.PluginDllsCopied}");
         logger.Info($"   ✓ Configs:     {result.CopyResult.ConfigsCopied}");
+        logger.Info($"   ✓ Dependencies: {result.CopyResult.DependenciesCopied}");
 
         if (!result.Success)
         {
@@ -946,7 +998,7 @@ internal sealed record LauncherResult(
         new(true, copy, health, storyModePath, buildOutput, logPath, summaryPath, launch);
 
     public static LauncherResult Failure(string logPath, string? projectRoot, string? buildOutput, string? storyModePath) =>
-        new(false, new DeploymentResult(0, 0, 0), new InstallHealthReport(Array.Empty<string>()), storyModePath ?? projectRoot, buildOutput, logPath, null, LaunchResult.Skipped("failed early"));
+        new(false, new DeploymentResult(0, 0, 0, 0), new InstallHealthReport(Array.Empty<string>()), storyModePath ?? projectRoot, buildOutput, logPath, null, LaunchResult.Skipped("failed early"));
 }
 
 internal static class SummaryExporter
@@ -964,6 +1016,7 @@ internal static class SummaryExporter
                 copy.TrainerDllsCopied,
                 copy.PluginDllsCopied,
                 copy.ConfigsCopied,
+                copy.DependenciesCopied,
                 DryRun = dryRun
             },
             HealthWarnings = health.Warnings,

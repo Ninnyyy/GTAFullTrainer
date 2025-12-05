@@ -180,4 +180,10 @@ if (Test-Path $localPlugins) {
     }
 }
 
+$dependencies = Join-Path $projectRoot "Dependencies"
+if (Test-Path $dependencies) {
+    Write-Host "Copying optional Dependencies bundle into Story Mode folder..." -ForegroundColor Cyan
+    Copy-Item $dependencies -Destination $resolvedGamePath -Recurse -Force
+}
+
 Write-Host "Deployed Ninny Trainer to $trainerFolder (Story Mode only)" -ForegroundColor Green
