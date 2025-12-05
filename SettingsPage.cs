@@ -1,19 +1,43 @@
-﻿using GTAFullTrainer.UI;
-using GTAFullTrainer.Utils;
+using GTAFullTrainer.Core;
+using GTAFullTrainer.UI;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace GTAFullTrainer.Pages
 {
     public static class SettingsPage
     {
-        private static List<UIElement> items = new List<UIElement>();
+        private static readonly List<UIElement> items = new List<UIElement>();
 
         static SettingsPage()
         {
             items.Add(new UIKeybind("Open Menu Key", 0, "OpenMenuKey", Keys.Insert));
-            items.Add(new UIToggle("Animations Enabled", 1, true));
-            items.Add(new UISlider("UI Scale", 2, 0.5f, 1.5f, 1.0f));
+
+            items.Add(new UISettingsToggle("Auto-Open Menu", 1, "AutoOpenMenuOnStart", true, state =>
+            {
+                TrainerMain.Instance?.SetAutoOpen(state);
+            }));
+
+            items.Add(new UISettingsToggle("Menu Animations", 2, "MenuAnimationsEnabled", true, enabled =>
+            {
+                MenuEngine.SetAnimationsEnabled(enabled);
+            }));
+
+            items.Add(new UISettingsSlider("Menu Animation Speed", 3, "MenuAnimationSpeed", 0.02f, 0.25f, 0.08f, 0.01f, speed =>
+            {
+                MenuEngine.SetAnimationSpeed(speed);
+            }));
+
+            items.Add(new UISettingsSlider("UI Scale", 4, "MenuUiScale", 0.75f, 1.50f, 1.00f, 0.05f, scale =>
+            {
+                MenuEngine.SetUiScale(scale);
+            }));
+
+            items.Add(new UISettingsToggle("Trainer Logging", 5, "TrainerLoggingEnabled", true, enabled =>
+            {
+                TrainerLogger.SetEnabled(enabled);
+            }));
         }
 
         public static void Draw(int index)
